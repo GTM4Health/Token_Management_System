@@ -1,10 +1,40 @@
+```python
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO
+from flask_cors import CORS
 import sqlite3
 import os
 
+# ==========================
+# Flask App Configuration
+# ==========================
+
 app = Flask(__name__)
-socketio = SocketIO(app)
+
+# Allow the Vercel frontend to communicate with Render
+CORS(
+    app,
+    resources={
+        r"/*": {
+            "origins": [
+                "https://gtm-tms.vercel.app"
+            ]
+        }
+    }
+)
+
+# Socket.IO configuration
+socketio = SocketIO(
+    app,
+    cors_allowed_origins=[
+        "https://gtm-tms.vercel.app"
+    ],
+    async_mode="eventlet"
+)
+
+# ==========================
+# Database Configuration
+# ==========================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE = os.path.join(BASE_DIR, "token.db")
@@ -20,27 +50,33 @@ def init_db():
     cursor = conn.cursor()
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS tokens(
-
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        token TEXT NOT NULL,
-        status TEXT NOT NULL,
-        generated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
-    )
+        CREATE TABLE IF NOT EXISTS tokens(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            token TEXT NOT NULL,
+            status TEXT NOT NULL,
+            generated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
     """)
 
     conn.commit()
     conn.close()
 
 
+# Initialize database when the server starts
+init_db()
+
+
 # ==========================
-# MAIN DISPLAY (Default Page)
+# MAIN DISPLAY
 # ==========================
 
 @app.route('/')
 def home():
+    return render_template("display.html")
 
+
+@app.route('/display')
+def display():
     return render_template("display.html")
 
 
@@ -70,11 +106,14 @@ def kiosk():
     else:
         token = last[0]
 
-    return render_template("kiosk.html", token=token)
+    return render_template(
+        "kiosk.html",
+        token=token
+    )
 
 
 # ==========================
-# Generate Token
+# GENERATE TOKEN
 # ==========================
 
 @app.route('/generate', methods=['POST'])
@@ -100,16 +139,23 @@ def generate_token():
     token = f"{number:03d}"
 
     cursor.execute(
-        "INSERT INTO tokens (token, status) VALUES (?, ?)",
+        """
+        INSERT INTO tokens (token, status)
+        VALUES (?, ?)
+        """,
         (token, "Waiting")
     )
 
     conn.commit()
     conn.close()
 
-    socketio.emit("new_token", {
-        "token": token
-    })
+    # Notify connected clients
+    socketio.emit(
+        "new_token",
+        {
+            "token": token
+        }
+    )
 
     return jsonify({
         "token": token
@@ -117,7 +163,7 @@ def generate_token():
 
 
 # ==========================
-# Call Next Token
+# CALL NEXT TOKEN
 # ==========================
 
 @app.route('/next', methods=['POST'])
@@ -126,12 +172,14 @@ def next_token():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
+    # Mark currently serving token as completed
     cursor.execute("""
         UPDATE tokens
         SET status='Completed'
         WHERE status='Serving'
     """)
 
+    # Find oldest waiting token
     cursor.execute("""
         SELECT id, token
         FROM tokens
@@ -154,6 +202,7 @@ def next_token():
     token_id = row[0]
     token = row[1]
 
+    # Set token as serving
     cursor.execute("""
         UPDATE tokens
         SET status='Serving'
@@ -163,9 +212,13 @@ def next_token():
     conn.commit()
     conn.close()
 
-    socketio.emit("serving_changed", {
-        "token": token
-    })
+    # Notify connected clients
+    socketio.emit(
+        "serving_changed",
+        {
+            "token": token
+        }
+    )
 
     return jsonify({
         "serving": token
@@ -173,7 +226,7 @@ def next_token():
 
 
 # ==========================
-# Call Again
+# CALL AGAIN
 # ==========================
 
 @app.route('/call_again', methods=['POST'])
@@ -199,25 +252,37 @@ def call_again():
             "message": "No token serving"
         })
 
-    socketio.emit("serving_changed", {
-        "token": row[0]
-    })
+    token = row[0]
+
+    # Notify connected clients
+    socketio.emit(
+        "serving_changed",
+        {
+            "token": token
+        }
+    )
 
     return jsonify({
-        "token": row[0]
+        "token": token
     })
 
 
 # ==========================
-# Call Specific Token
+# CALL SPECIFIC TOKEN
 # ==========================
 
-@app.route("/call_specific", methods=["POST"])
+@app.route('/call_specific', methods=['POST'])
 def call_specific():
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
 
-    token = data["token"].zfill(3)
+    if not data or "token" not in data:
+
+        return jsonify({
+            "message": "Token is required"
+        }), 400
+
+    token = str(data["token"]).zfill(3)
 
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -236,8 +301,9 @@ def call_specific():
 
         return jsonify({
             "message": "Invalid Token"
-        })
+        }), 404
 
+    # Notify connected clients
     socketio.emit(
         "serving_changed",
         {
@@ -246,10 +312,13 @@ def call_specific():
     )
 
     return jsonify({
-        "message": "Called"
+        "message": "Called",
+        "token": token
     })
+
+
 # ==========================
-# Reset Queue
+# RESET QUEUE
 # ==========================
 
 @app.route('/reset', methods=['POST'])
@@ -259,11 +328,16 @@ def reset():
     cursor = conn.cursor()
 
     cursor.execute("DELETE FROM tokens")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name='tokens'")
+
+    cursor.execute("""
+        DELETE FROM sqlite_sequence
+        WHERE name='tokens'
+    """)
 
     conn.commit()
     conn.close()
 
+    # Notify connected clients
     socketio.emit("queue_reset")
 
     return jsonify({
@@ -272,10 +346,10 @@ def reset():
 
 
 # ==========================
-# Waiting Queue API
+# WAITING QUEUE API
 # ==========================
 
-@app.route('/waiting')
+@app.route('/waiting', methods=['GET'])
 def waiting():
 
     conn = sqlite3.connect(DATABASE)
@@ -292,12 +366,12 @@ def waiting():
 
     conn.close()
 
-    waiting = []
+    waiting_tokens = [
+        row[0]
+        for row in rows
+    ]
 
-    for row in rows:
-        waiting.append(row[0])
-
-    return jsonify(waiting)
+    return jsonify(waiting_tokens)
 
 
 # ==========================
@@ -306,25 +380,14 @@ def waiting():
 
 @app.route('/operator')
 def operator():
-
     return render_template("operator.html")
 
 
 # ==========================
-# MAIN DISPLAY
+# PRINT TOKEN
 # ==========================
 
-@app.route('/display')
-def display():
-
-    return render_template("display.html")
-
-
-# ==========================
-# Print Token
-# ==========================
-
-@app.route("/print/<token>")
+@app.route('/print/<token>')
 def print_token(token):
 
     return render_template(
@@ -334,16 +397,28 @@ def print_token(token):
 
 
 # ==========================
-# Main
+# HEALTH CHECK
+# ==========================
+
+@app.route('/health')
+def health():
+
+    return jsonify({
+        "status": "online",
+        "service": "GTM4Health Token Management System"
+    })
+
+
+# ==========================
+# MAIN
 # ==========================
 
 if __name__ == '__main__':
 
-    init_db()
-
     socketio.run(
         app,
         host="0.0.0.0",
-        port=5000,
-        debug=True
+        port=int(os.environ.get("PORT", 5000)),
+        debug=False
     )
+```
