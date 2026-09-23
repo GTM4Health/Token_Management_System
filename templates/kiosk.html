@@ -161,7 +161,8 @@ body{
 
 <div class="header">
 
-    <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
+    <!-- Vercel serves the logo -->
+    <img src="/logo.png" class="logo">
 
     <div class="header-title">
         TOKEN DISPENSER
@@ -170,20 +171,34 @@ body{
     <div class="menu-container">
 
         <button class="menu-btn" onclick="toggleMenu(event)">
-            <span class="material-symbols-outlined">apps</span>
+
+            <span class="material-symbols-outlined">
+                apps
+            </span>
+
         </button>
 
         <div class="menu" id="menu">
 
-            <a href="/">Main Display</a>
-            <a href="/operator">Calling Unit</a>
-            <a href="/kiosk">Token Dispenser</a>
+            <a href="/">
+                Main Display
+            </a>
+
+            <a href="/operator.html">
+                Calling Unit
+            </a>
+
+            <a href="/kiosk.html">
+                Token Dispenser
+            </a>
 
         </div>
 
     </div>
 
 </div>
+
+
 <div class="main-content">
 
     <div class="token-card">
@@ -193,7 +208,7 @@ body{
         </div>
 
         <div id="token" class="generated-token">
-            {{ token }}
+            000
         </div>
 
         <div class="token-message">
@@ -204,57 +219,140 @@ body{
 
 </div>
 
+
 <div class="footer">
     © GTM4Health 2026
 </div>
 
+
+<!-- Socket.IO client -->
+
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+
 <script>
+
+/* ==========================================
+   RENDER BACKEND
+========================================== */
+
+const API_URL =
+    "https://token-management-system-cvo8.onrender.com";
+
+
+/* ==========================================
+   MENU
+========================================== */
 
 function toggleMenu(event){
 
     event.stopPropagation();
 
-    const menu = document.getElementById("menu");
+    const menu =
+        document.getElementById("menu");
 
     menu.style.display =
         menu.style.display === "block"
         ? "none"
         : "block";
-
 }
+
 
 window.addEventListener("click", function(){
 
-    document.getElementById("menu").style.display = "none";
+    document.getElementById("menu").style.display =
+        "none";
 
 });
 
-const socket = io();
+
+/* ==========================================
+   CONNECT TO RENDER SOCKET.IO
+========================================== */
+
+const socket = io(API_URL);
+
+
+/* ==========================================
+   SOCKET CONNECTION
+========================================== */
 
 socket.on("connect", function(){
 
-    console.log("Connected");
+    console.log(
+        "Connected to Render:",
+        socket.id
+    );
 
 });
 
+
+socket.on("connect_error", function(error){
+
+    console.error(
+        "Socket.IO connection error:",
+        error
+    );
+
+});
+
+
+socket.on("disconnect", function(){
+
+    console.log(
+        "Disconnected from Render"
+    );
+
+});
+
+
+/* ==========================================
+   NEW TOKEN
+========================================== */
+
 socket.on("new_token", function(data){
 
-    document.getElementById("token").innerHTML = data.token;
+    if(!data || !data.token){
+        return;
+    }
+
+    const token =
+        data.token;
+
+    /*
+        Update displayed token
+    */
+
+    document.getElementById("token").innerHTML =
+        token;
+
+
+    /*
+        Open printable token page
+        on Vercel
+    */
 
     window.open(
-        "/print/" + data.token,
+        "/print.html?token=" +
+        encodeURIComponent(token),
         "_blank",
         "width=420,height=700"
     );
 
 });
 
+
+/* ==========================================
+   QUEUE RESET
+========================================== */
+
 socket.on("queue_reset", function(){
 
-    document.getElementById("token").innerHTML = "000";
+    document.getElementById("token").innerHTML =
+        "000";
 
 });
+
 
 </script>
 
