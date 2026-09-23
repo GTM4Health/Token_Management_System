@@ -6,58 +6,37 @@
 
 <style>
 
-body{
-
-    font-family:Arial,Helvetica,sans-serif;
-
-    width:300px;
-
-    margin:auto;
-
-    text-align:center;
-
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    width: 300px;
+    margin: auto;
+    text-align: center;
 }
 
-.logo{
-
-    font-size:24px;
-
-    font-weight:bold;
-
-    margin-top:20px;
-
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 20px;
 }
 
-h1{
-
-    font-size:60px;
-
-    margin:20px 0;
-
+h1 {
+    font-size: 60px;
+    margin: 20px 0;
 }
 
-.line{
-
-    border-top:1px dashed black;
-
-    margin:15px 0;
-
+.line {
+    border-top: 1px dashed black;
+    margin: 15px 0;
 }
 
-.small{
-
-    font-size:15px;
-
+.small {
+    font-size: 15px;
 }
 
-@media print{
-
-body{
-
-    width:80mm;
-
-}
-
+@media print {
+    body {
+        width: 80mm;
+    }
 }
 
 </style>
@@ -67,85 +46,83 @@ body{
 <body onload="printToken()">
 
 <div class="logo">
-
-GTM4Health
-
+    GTM4Health
 </div>
 
 <div class="line"></div>
 
 <div class="small">
-
-TOKEN NUMBER
-
+    TOKEN NUMBER
 </div>
 
-<h1>
-
-{{ token }}
-
+<h1 id="tokenNumber">
+    ---
 </h1>
 
 <div class="line"></div>
 
 <p>
-
-Date:<br>
-
-<script>
-
-document.write(new Date().toLocaleDateString());
-
-</script>
-
+    Date:<br>
+    <span id="date"></span>
 </p>
 
 <p>
-
-Time:<br>
-
-<script>
-
-document.write(new Date().toLocaleTimeString());
-
-</script>
-
+    Time:<br>
+    <span id="time"></span>
 </p>
 
 <div class="line"></div>
 
 <p>
-
-Please wait until your<br>
-
-token is announced.
-
+    Please wait until your<br>
+    token is announced.
 </p>
 
 <div class="line"></div>
 
 <p>
-
-Thank You
-
+    Thank You
 </p>
 
 <script>
 
-function printToken(){
+function loadToken() {
 
-    window.print();
+    // Get token from URL
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
 
-    setTimeout(function(){
+    if (token) {
+        document.getElementById("tokenNumber").textContent = token;
+    }
 
-        window.close();
+    // Current date and time
+    const now = new Date();
 
-    },500);
+    document.getElementById("date").textContent =
+        now.toLocaleDateString();
+
+    document.getElementById("time").textContent =
+        now.toLocaleTimeString();
+}
+
+function printToken() {
+
+    loadToken();
+
+    setTimeout(function() {
+
+        window.print();
+
+        setTimeout(function() {
+            window.close();
+        }, 500);
+
+    }, 200);
 
 }
 
 </script>
 
 </body>
-
 </html>
