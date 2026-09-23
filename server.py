@@ -10,7 +10,7 @@ import os
 
 app = Flask(__name__)
 
-# Allow the Vercel frontend to communicate with Render
+# Allow Vercel frontend to communicate with Render
 CORS(
     app,
     resources={
@@ -30,6 +30,7 @@ socketio = SocketIO(
     ],
     async_mode="eventlet"
 )
+
 
 # ==========================
 # Database Configuration
@@ -61,7 +62,7 @@ def init_db():
     conn.close()
 
 
-# Initialize database when the server starts
+# Initialize database
 init_db()
 
 
@@ -77,6 +78,38 @@ def home():
 @app.route('/display')
 def display():
     return render_template("display.html")
+
+
+# ==========================
+# CURRENT SERVING TOKEN
+# ==========================
+
+@app.route('/current', methods=['GET'])
+def current_token():
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT token
+        FROM tokens
+        WHERE status='Serving'
+        ORDER BY id DESC
+        LIMIT 1
+    """)
+
+    row = cursor.fetchone()
+
+    conn.close()
+
+    if row is None:
+        return jsonify({
+            "token": "---"
+        })
+
+    return jsonify({
+        "token": row[0]
+    })
 
 
 # ==========================
@@ -238,6 +271,7 @@ def call_again():
         SELECT token
         FROM tokens
         WHERE status='Serving'
+        ORDER BY id DESC
         LIMIT 1
     """)
 
@@ -281,26 +315,47 @@ def call_specific():
             "message": "Token is required"
         }), 400
 
-    token = str(data["token"]).zfill(3)
+    token = str(data["token"]).strip().zfill(3)
 
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
+    # Find requested token
     cursor.execute("""
-        SELECT token
+        SELECT id, token
         FROM tokens
         WHERE token=?
+        LIMIT 1
     """, (token,))
 
     row = cursor.fetchone()
 
-    conn.close()
-
     if row is None:
+
+        conn.close()
 
         return jsonify({
             "message": "Invalid Token"
         }), 404
+
+    token_id = row[0]
+
+    # Mark any currently serving token as completed
+    cursor.execute("""
+        UPDATE tokens
+        SET status='Completed'
+        WHERE status='Serving'
+    """)
+
+    # Make requested token the serving token
+    cursor.execute("""
+        UPDATE tokens
+        SET status='Serving'
+        WHERE id=?
+    """, (token_id,))
+
+    conn.commit()
+    conn.close()
 
     # Notify connected clients
     socketio.emit(
@@ -326,8 +381,10 @@ def reset():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
+    # Delete all tokens
     cursor.execute("DELETE FROM tokens")
 
+    # Reset token ID sequence
     cursor.execute("""
         DELETE FROM sqlite_sequence
         WHERE name='tokens'
@@ -420,4 +477,3 @@ if __name__ == '__main__':
         port=int(os.environ.get("PORT", 5000)),
         debug=False
     )
-
