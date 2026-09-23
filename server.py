@@ -5,7 +5,10 @@ import sqlite3
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-DATABASE = "token.db"
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE = os.path.join(BASE_DIR, "token.db")
 
 
 # ==========================
