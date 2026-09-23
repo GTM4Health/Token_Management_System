@@ -195,7 +195,7 @@ body{
 
     <div class="header">
 
-        <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
+        <img src="/logo.png" class="logo">
 
         <div class="header-title">
             MAIN DISPLAY
@@ -215,9 +215,9 @@ body{
 
                 <a href="/">Main Display</a>
 
-                <a href="/operator">Calling Unit</a>
+                <a href="/operator.html">Calling Unit</a>
 
-                <a href="/kiosk">Token Dispenser</a>
+                <a href="/kiosk.html">Token Dispenser</a>
 
             </div>
 
@@ -249,9 +249,7 @@ body{
                 WAITING QUEUE
             </div>
 
-            <div id="queue" class="queue-list">
-
-            </div>
+            <div id="queue" class="queue-list"></div>
 
         </div>
 
@@ -266,7 +264,20 @@ body{
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
 <script>
-    function toggleMenu(event){
+
+/* ==========================================
+   RENDER BACKEND
+========================================== */
+
+const API_URL =
+    "https://token-management-system-cvo8.onrender.com";
+
+
+/* ==========================================
+   MENU
+========================================== */
+
+function toggleMenu(event){
 
     event.stopPropagation();
 
@@ -276,8 +287,8 @@ body{
         menu.style.display === "block"
         ? "none"
         : "block";
-
 }
+
 
 window.addEventListener("click", function(){
 
@@ -285,25 +296,121 @@ window.addEventListener("click", function(){
 
 });
 
-const socket = io();
+
+/* ==========================================
+   SOCKET.IO CONNECTION
+========================================== */
+
+const socket = io(API_URL);
+
+
+/* ==========================================
+   SOCKET CONNECTION STATUS
+========================================== */
+
+socket.on("connect", function(){
+
+    console.log("Connected to Render:", socket.id);
+
+});
+
+
+socket.on("connect_error", function(error){
+
+    console.error("Socket.IO connection error:", error);
+
+});
+
+
+socket.on("disconnect", function(){
+
+    console.log("Disconnected from Render");
+
+});
+
+
+/* ==========================================
+   CURRENT SERVING TOKEN
+   Runs when page first opens
+========================================== */
+
+function loadCurrent(){
+
+    fetch(`${API_URL}/current`)
+
+        .then(response => {
+
+            if(!response.ok){
+
+                throw new Error(
+                    "Current token request failed"
+                );
+
+            }
+
+            return response.json();
+
+        })
+
+        .then(data => {
+
+            document.getElementById("serving").innerHTML =
+                data.token || "---";
+
+        })
+
+        .catch(error => {
+
+            console.error(
+                "Current token error:",
+                error
+            );
+
+            document.getElementById("serving").innerHTML =
+                "---";
+
+        });
+
+}
+
+
+/* ==========================================
+   LIVE TOKEN CHANGE
+========================================== */
 
 socket.on("serving_changed", function(data){
 
-    document.getElementById("serving").innerHTML = data.token;
+    if(data && data.token){
 
-    loadWaiting();
+        document.getElementById("serving").innerHTML =
+            data.token;
 
-    speakToken(data.token);
+        loadWaiting();
+
+        speakToken(data.token);
+
+    }
 
 });
+
+
+/* ==========================================
+   QUEUE RESET
+========================================== */
 
 socket.on("queue_reset", function(){
 
-    document.getElementById("serving").innerHTML = "---";
+    document.getElementById("serving").innerHTML =
+        "---";
 
     loadWaiting();
 
 });
+
+
+/* ==========================================
+   FORMAT TOKEN FOR SPEECH
+========================================== */
 
 function formatToken(token){
 
@@ -324,6 +431,9 @@ function formatToken(token){
             case "8": return "Eight";
             case "9": return "Nine";
 
+            default:
+                return "";
+
         }
 
     });
@@ -332,17 +442,23 @@ function formatToken(token){
 
 }
 
+
+/* ==========================================
+   TEXT-TO-SPEECH
+========================================== */
+
 function speakToken(token){
 
     window.speechSynthesis.cancel();
 
-    let speech = new SpeechSynthesisUtterance(
+    let speech =
+        new SpeechSynthesisUtterance(
 
-        "Attention please. Token number " +
-        formatToken(token) +
-        ". Please proceed to the Calling Unit."
+            "Attention please. Token number " +
+            formatToken(token) +
+            ". Please proceed to the Calling Unit."
 
-    );
+        );
 
     speech.rate = 0.8;
     speech.pitch = 1;
@@ -351,38 +467,82 @@ function speakToken(token){
 
 }
 
+
+/* ==========================================
+   LOAD WAITING QUEUE
+========================================== */
+
 function loadWaiting(){
 
-    fetch("/waiting")
+    fetch(`${API_URL}/waiting`)
 
-    .then(response => response.json())
+        .then(response => {
 
-    .then(data => {
+            if(!response.ok){
 
-        if(data.length === 0){
+                throw new Error(
+                    "Waiting queue request failed"
+                );
 
-            document.getElementById("queue").innerHTML =
-            '<div class="queue-empty">No tokens in queue</div>';
+            }
 
-        }
+            return response.json();
 
-        else{
+        })
+
+        .then(data => {
+
+            const queue =
+                document.getElementById("queue");
+
+            if(!data || data.length === 0){
+
+                queue.innerHTML =
+                    '<div class="queue-empty">' +
+                    'No tokens in queue' +
+                    '</div>';
+
+                return;
+
+            }
 
             let html = "";
 
             data.forEach(function(token){
 
-                html += '<div class="queue-token">' + token + '</div>';
+                html +=
+                    '<div class="queue-token">' +
+                    token +
+                    '</div>';
 
             });
 
-            document.getElementById("queue").innerHTML = html;
+            queue.innerHTML = html;
 
-        }
+        })
 
-    });
+        .catch(error => {
+
+            console.error(
+                "Waiting queue error:",
+                error
+            );
+
+            document.getElementById("queue").innerHTML =
+                '<div class="queue-empty">' +
+                'Unable to connect to server' +
+                '</div>';
+
+        });
 
 }
+
+
+/* ==========================================
+   INITIAL PAGE LOAD
+========================================== */
+
+loadCurrent();
 
 loadWaiting();
 
