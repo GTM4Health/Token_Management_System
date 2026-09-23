@@ -1,131 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Token Management System</title>
 
-    <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        body{
+<title>Token Management System</title>
 
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"/>
+
+<style>
+
+*{
     margin:0;
-
-    padding-top:90px;
-
-    background:#f2f2f2;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    height:calc(100vh - 90px);
-
-    font-family:Arial, Helvetica, sans-serif;
-
+    padding:0;
+    box-sizing:border-box;
 }
-.topbar{
 
-    position:fixed;
-
-    top:0;
-
-    left:0;
-
+html,body{
     width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:Arial,"Segoe UI",sans-serif;
+    background:#eef6fb;
+    color:#12314d;
+}
 
-    height:90px;
-
-    background:#0b4f7c;
-
+body{
     display:flex;
+    flex-direction:column;
+}
 
+.header{
+    width:100%;
+    height:90px;
+    background:#0b4f7c;
+    display:flex;
     align-items:center;
-
     padding:0 5vw;
-
-    box-shadow:0 2px 8px rgba(0,0,0,.15);
-
-    z-index:1000;
-
+    color:white;
+    box-shadow:0 2px 8px rgba(0,0,0,.12);
 }
 
 .logo{
-
     height:48px;
     width:auto;
     margin-right:30px;
-
 }
-        .token-content{
-    flex:1;
+
+.header-title{
+    font-size:24px;
+    font-weight:600;
+    letter-spacing:1.5px;
+}
+
+.menu-container{
+    margin-left:auto;
+    position:relative;
+}
+
+.menu-btn{
+    background:none;
+    border:none;
+    color:white;
+    cursor:pointer;
     display:flex;
     align-items:center;
     justify-content:center;
-    padding:40px;
+    padding:8px;
+}
+
+.menu-btn:hover{
+    background:rgba(255,255,255,.15);
+    border-radius:8px;
+}
+
+.material-symbols-outlined{
+    font-size:34px;
+}
+
+.menu{
+    display:none;
+    position:absolute;
+    top:55px;
+    right:0;
+    width:230px;
+    background:white;
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 8px 25px rgba(0,0,0,.18);
+    z-index:999;
+}
+
+.menu a{
+    display:block;
+    padding:15px 20px;
+    text-decoration:none;
+    color:#12314d;
+    font-weight:600;
+}
+
+.menu a:hover{
+    background:#eef6fb;
+}
+
+.main-content{
+    flex:1;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:30px;
 }
 
 .token-card{
-    width:min(650px,92vw);
     background:white;
+    width:min(700px,95vw);
     border-radius:14px;
-    padding:60px 40px;
-    text-align:center;
     border-top:7px solid #1683c4;
-    box-shadow:0 8px 30px rgba(12,68,105,.10);
+    padding:45px;
+    text-align:center;
+    box-shadow:0 5px 20px rgba(12,68,105,.08);
 }
 
 .token-label{
     color:#607080;
-    font-size:17px;
+    font-size:18px;
     letter-spacing:3px;
+    font-weight:600;
 }
 
 .generated-token{
-    margin:20px 0;
-    color:#0b4f7c;
-    font-size:150px;
+    margin:25px 0;
+    font-size:170px;
     font-weight:700;
+    color:#0b4f7c;
     line-height:1;
 }
 
 .token-message{
     color:#607080;
-    font-size:17px;
+    font-size:18px;
 }
-.header-title{
 
+.footer{
+    margin-top:auto;
+    background:#0b4f7c;
     color:white;
-
-    font-size:24px;
-
-    font-weight:600;
-
-    letter-spacing:1.5px;
-
+    text-align:center;
+    padding:18px;
+    font-size:13px;
 }
 
-    </style>
+</style>
+
 </head>
 
 <body>
 
-<div class="topbar">
-
-    <div class="topbar">
+<div class="header">
 
     <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
 
     <div class="header-title">
-        TOKEN GENERATION
+        TOKEN DISPENSER
+    </div>
+
+    <div class="menu-container">
+
+        <button class="menu-btn" onclick="toggleMenu(event)">
+            <span class="material-symbols-outlined">apps</span>
+        </button>
+
+        <div class="menu" id="menu">
+
+            <a href="/">Main Display</a>
+            <a href="/operator">Calling Unit</a>
+            <a href="/kiosk">Token Dispenser</a>
+
+        </div>
+
     </div>
 
 </div>
-</div>
-
-<div class="token-content">
+<div class="main-content">
 
     <div class="token-card">
 
@@ -133,24 +192,43 @@
             YOUR TOKEN NUMBER
         </div>
 
-        <div
-            id="token"
-            class="generated-token"
-        >
+        <div id="token" class="generated-token">
             {{ token }}
         </div>
 
         <div class="token-message">
-            Please wait for your token to be called
+            Please wait for your token to be called.
         </div>
 
     </div>
 
 </div>
 
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<div class="footer">
+    © GTM4Health 2026
+</div>
 
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
+
+function toggleMenu(event){
+
+    event.stopPropagation();
+
+    const menu = document.getElementById("menu");
+
+    menu.style.display =
+        menu.style.display === "block"
+        ? "none"
+        : "block";
+
+}
+
+window.addEventListener("click", function(){
+
+    document.getElementById("menu").style.display = "none";
+
+});
 
 const socket = io();
 
@@ -171,12 +249,15 @@ socket.on("new_token", function(data){
     );
 
 });
+
 socket.on("queue_reset", function(){
 
     document.getElementById("token").innerHTML = "000";
 
 });
+
 </script>
 
 </body>
+
 </html>

@@ -3,25 +3,28 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Display</title>
+<title>Main Display</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
 
 <style>
 
 *{
+    margin:0;
+    padding:0;
     box-sizing:border-box;
 }
 
 body{
-    margin:0;
     font-family:Arial,"Segoe UI",sans-serif;
     background:#eef6fb;
     color:#12314d;
 }
 
 .page{
+    min-height:100vh;
     display:flex;
     flex-direction:column;
-    min-height:100vh;
 }
 
 .header{
@@ -45,6 +48,56 @@ body{
     font-size:24px;
     font-weight:600;
     letter-spacing:1.5px;
+}
+
+.menu-container{
+    margin-left:auto;
+    position:relative;
+}
+
+.menu-btn{
+    background:none;
+    border:none;
+    color:white;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:8px;
+}
+
+.menu-btn:hover{
+    background:rgba(255,255,255,.15);
+    border-radius:8px;
+}
+
+.material-symbols-outlined{
+    font-size:34px;
+}
+
+.menu{
+    display:none;
+    position:absolute;
+    right:0;
+    top:55px;
+    width:230px;
+    background:white;
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 8px 25px rgba(0,0,0,.18);
+    z-index:1000;
+}
+
+.menu a{
+    display:block;
+    padding:15px 20px;
+    color:#12314d;
+    text-decoration:none;
+    font-weight:600;
+}
+
+.menu a:hover{
+    background:#eef6fb;
 }
 
 .display-content{
@@ -145,7 +198,29 @@ body{
         <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
 
         <div class="header-title">
-            HOSPITAL DISPLAY
+            MAIN DISPLAY
+        </div>
+
+        <div class="menu-container">
+
+            <button class="menu-btn" onclick="toggleMenu(event)">
+
+                <span class="material-symbols-outlined">
+                    apps
+                </span>
+
+            </button>
+
+            <div id="menu" class="menu">
+
+                <a href="/">Main Display</a>
+
+                <a href="/operator">Calling Unit</a>
+
+                <a href="/kiosk">Token Dispenser</a>
+
+            </div>
+
         </div>
 
     </div>
@@ -163,7 +238,7 @@ body{
             </div>
 
             <div class="proceed">
-                Please proceed to the Doctor Room
+                Please proceed to the Calling Unit
             </div>
 
         </div>
@@ -191,6 +266,24 @@ body{
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
 <script>
+    function toggleMenu(event){
+
+    event.stopPropagation();
+
+    const menu = document.getElementById("menu");
+
+    menu.style.display =
+        menu.style.display === "block"
+        ? "none"
+        : "block";
+
+}
+
+window.addEventListener("click", function(){
+
+    document.getElementById("menu").style.display = "none";
+
+});
 
 const socket = io();
 
@@ -206,7 +299,7 @@ socket.on("serving_changed", function(data){
 
 socket.on("queue_reset", function(){
 
-    document.getElementById("serving").innerHTML="---";
+    document.getElementById("serving").innerHTML = "---";
 
     loadWaiting();
 
@@ -214,30 +307,28 @@ socket.on("queue_reset", function(){
 
 function formatToken(token){
 
-    let letter=token.charAt(0);
+    let digits = token.split("");
 
-    let digits=token.substring(1).split("");
-
-    let words=digits.map(function(d){
+    let words = digits.map(function(d){
 
         switch(d){
 
-            case "0":return "Zero";
-            case "1":return "One";
-            case "2":return "Two";
-            case "3":return "Three";
-            case "4":return "Four";
-            case "5":return "Five";
-            case "6":return "Six";
-            case "7":return "Seven";
-            case "8":return "Eight";
-            case "9":return "Nine";
+            case "0": return "Zero";
+            case "1": return "One";
+            case "2": return "Two";
+            case "3": return "Three";
+            case "4": return "Four";
+            case "5": return "Five";
+            case "6": return "Six";
+            case "7": return "Seven";
+            case "8": return "Eight";
+            case "9": return "Nine";
 
         }
 
     });
 
-    return letter+", "+words.join(", ");
+    return words.join(", ");
 
 }
 
@@ -245,17 +336,16 @@ function speakToken(token){
 
     window.speechSynthesis.cancel();
 
-    let speech=new SpeechSynthesisUtterance(
+    let speech = new SpeechSynthesisUtterance(
 
-        "Attention please. Token number "+
-        formatToken(token)+
-        ". Please proceed to the Doctor Room."
+        "Attention please. Token number " +
+        formatToken(token) +
+        ". Please proceed to the Calling Unit."
 
     );
 
-    speech.rate=.8;
-
-    speech.pitch=1;
+    speech.rate = 0.8;
+    speech.pitch = 1;
 
     window.speechSynthesis.speak(speech);
 
@@ -265,28 +355,28 @@ function loadWaiting(){
 
     fetch("/waiting")
 
-    .then(response=>response.json())
+    .then(response => response.json())
 
-    .then(data=>{
+    .then(data => {
 
-        if(data.length==0){
+        if(data.length === 0){
 
-            document.getElementById("queue").innerHTML=
+            document.getElementById("queue").innerHTML =
             '<div class="queue-empty">No tokens in queue</div>';
 
         }
 
         else{
 
-            let html="";
+            let html = "";
 
             data.forEach(function(token){
 
-                html+='<div class="queue-token">'+token+'</div>';
+                html += '<div class="queue-token">' + token + '</div>';
 
             });
 
-            document.getElementById("queue").innerHTML=html;
+            document.getElementById("queue").innerHTML = html;
 
         }
 

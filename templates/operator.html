@@ -1,124 +1,359 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Doctor Room Dashboard</title>
+<title>Calling Unit</title>
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"/>
 
 <style>
 
 *{
+margin:0;
+padding:0;
 box-sizing:border-box;
 }
 
-body{
-margin:0;
+html,body{
+height:100%;
 font-family:Arial,"Segoe UI",sans-serif;
 background:#eef6fb;
 color:#12314d;
 }
 
+body{
+display:flex;
+flex-direction:column;
+}
+
 .header{
+
 width:100%;
 height:90px;
+
 background:#0b4f7c;
+
 display:flex;
 align-items:center;
+
 padding:0 5vw;
+
 color:white;
+
 box-shadow:0 2px 8px rgba(0,0,0,.12);
+
 }
 
 .logo{
+
 height:48px;
+width:auto;
 margin-right:30px;
+
 }
 
 .header-title{
+
 font-size:24px;
 font-weight:600;
 letter-spacing:1.5px;
+
 }
 
+/* ---------- Apps Menu ---------- */
+
+.menu-container{
+
+margin-left:auto;
+
+position:relative;
+
+}
+
+.menu-btn{
+
+background:none;
+
+border:none;
+
+color:white;
+
+cursor:pointer;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+padding:8px;
+
+}
+
+.menu-btn:hover{
+
+background:rgba(255,255,255,.15);
+
+border-radius:8px;
+
+}
+
+.material-symbols-outlined{
+
+font-size:34px;
+
+}
+
+.menu{
+
+display:none;
+
+position:absolute;
+
+top:55px;
+
+right:0;
+
+width:230px;
+
+background:white;
+
+border-radius:10px;
+
+overflow:hidden;
+
+box-shadow:0 8px 25px rgba(0,0,0,.18);
+
+z-index:9999;
+
+}
+
+.menu a{
+
+display:block;
+
+padding:15px 20px;
+
+text-decoration:none;
+
+font-weight:600;
+
+color:#12314d;
+
+}
+
+.menu a:hover{
+
+background:#eef6fb;
+
+}
+
+/* ---------- Main ---------- */
+
 .management-content{
-padding:40px 5vw;
+
+flex:1;
+
+display:flex;
+flex-direction:column;
+align-items:center;
+
+padding:40px;
+
 }
 
 .cards{
-display:grid;
-grid-template-columns:1fr;
-gap:25px;
-max-width:700px;
-margin:auto;
+
+width:100%;
+
+display:flex;
+
+justify-content:center;
+
 }
 
 .card{
+
 background:white;
-border-radius:12px;
-padding:35px;
-border-top:6px solid #1683c4;
+
+width:min(760px,92vw);
+
+border-radius:14px;
+
+padding:50px;
+
+border-top:7px solid #1683c4;
+
 box-shadow:0 5px 20px rgba(12,68,105,.08);
+
 text-align:center;
+
 }
 
 .card-label{
+
 color:#607080;
-font-size:16px;
-letter-spacing:2px;
+
+font-size:18px;
+
+letter-spacing:3px;
+
 font-weight:600;
+
 }
 
 .current-number{
-font-size:110px;
+
+font-size:140px;
+
 font-weight:700;
+
 color:#0b4f7c;
-margin-top:20px;
+
+margin-top:30px;
+
+line-height:1;
+
+}
+.manual-call{
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+gap:12px;
+
+margin-top:35px;
+
+}
+
+.manual-call input{
+
+width:260px;
+
+height:52px;
+
+padding:0 16px;
+
+font-size:18px;
+
+border:1px solid #c6d0d8;
+
+border-radius:8px;
+
+outline:none;
+
+}
+
+.manual-call button{
+
+height:52px;
+
+padding:0 28px;
+
+border:none;
+
+border-radius:8px;
+
+background:#0b4f7c;
+
+color:white;
+
+font-size:18px;
+
+font-weight:600;
+
+cursor:pointer;
+
 }
 
 .actions{
+
 display:flex;
+
 justify-content:center;
-gap:15px;
-margin-top:35px;
+
+align-items:center;
+
+gap:18px;
+
+margin-top:40px;
+
 flex-wrap:wrap;
+
 }
 
-button{
-padding:15px 25px;
+.actions button{
+
+width:190px;
+
+height:55px;
+
 border:none;
+
 border-radius:8px;
-font-size:17px;
+
+font-size:18px;
+
 font-weight:600;
+
 cursor:pointer;
+
+transition:.2s;
+
+}
+
+.actions button:hover{
+
+transform:translateY(-2px);
+
 }
 
 .call-button{
+
 background:#0b4f7c;
+
 color:white;
+
 }
 
-.reset-button{
-background:#d32f2f;
-color:white;
-}
 .again-button{
 
 background:#0b4f7c;
+
 color:white;
 
 }
 
+.reset-button{
 
+background:#d32f2f;
+
+color:white;
+
+}
 
 .footer{
-margin-top:40px;
+
+margin-top:auto;
+
 background:#0b4f7c;
+
 color:white;
+
 text-align:center;
+
 padding:18px;
+
 font-size:13px;
+
 }
 
 </style>
@@ -132,7 +367,33 @@ font-size:13px;
 <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
 
 <div class="header-title">
-DOCTOR CALLING
+
+CALLING UNIT
+
+</div>
+
+<div class="menu-container">
+
+<button class="menu-btn" onclick="toggleMenu(event)">
+
+<span class="material-symbols-outlined">
+
+apps
+
+</span>
+
+</button>
+
+<div class="menu" id="menu">
+
+<a href="/">Main Display</a>
+
+<a href="/operator">Calling Unit</a>
+
+<a href="/kiosk">Token Dispenser</a>
+
+</div>
+
 </div>
 
 </div>
@@ -158,23 +419,24 @@ CURRENT TOKEN
 </div>
 
 </div>
-<div style="text-align:center; margin-bottom:20px;">
 
-    <input
-        type="number"
-        id="manualToken"
-        placeholder="Enter Token Number"
-        style="padding:12px; width:220px; font-size:18px;">
+<div class="manual-call">
 
-    <button
-        onclick="callSpecific()"
-        class="call-button">
+<input
+type="number"
+id="manualToken"
+placeholder="Enter Token Number">
 
-        Call Token
+<button
+onclick="callSpecific()"
+class="call-button">
 
-    </button>
+Call Token
+
+</button>
 
 </div>
+
 <div class="actions">
 
 <button
@@ -214,8 +476,34 @@ Reset Queue
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
 <script>
+    const socket = io();
 
-const socket = io();
+/* ==========================
+   Apps Menu
+========================== */
+
+function toggleMenu(event){
+
+    event.stopPropagation();
+
+    const menu = document.getElementById("menu");
+
+    menu.style.display =
+        menu.style.display === "block"
+        ? "none"
+        : "block";
+
+}
+
+window.addEventListener("click", function(){
+
+    document.getElementById("menu").style.display = "none";
+
+});
+
+/* ==========================
+   Calling Controls
+========================== */
 
 function nextToken(){
 
@@ -238,6 +526,8 @@ function callSpecific(){
     let token =
         document.getElementById("manualToken").value;
 
+    if(token === "") return;
+
     fetch("/call_specific",{
 
         method:"POST",
@@ -252,7 +542,7 @@ function callSpecific(){
 
     });
 
-    document.getElementById("manualToken").value = "";
+    document.getElementById("manualToken").value="";
 
 }
 
@@ -268,17 +558,30 @@ function resetQueue(){
 
 }
 
+/* ==========================
+   Live Updates
+========================== */
+
+socket.on("connect", function(){
+
+    console.log("Connected");
+
+});
+
 socket.on("serving_changed", function(data){
 
     document.getElementById("current").innerHTML = data.token;
 
 });
+
 socket.on("queue_reset", function(){
 
     document.getElementById("current").innerHTML = "---";
 
 });
+
 </script>
+
 </body>
 
 </html>

@@ -1,11 +1,10 @@
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO
 import sqlite3
+import os
 
 app = Flask(__name__)
 socketio = SocketIO(app)
-
-import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE = os.path.join(BASE_DIR, "token.db")
@@ -36,11 +35,21 @@ def init_db():
 
 
 # ==========================
-# Kiosk Screen
+# MAIN DISPLAY (Default Page)
 # ==========================
 
 @app.route('/')
 def home():
+
+    return render_template("display.html")
+
+
+# ==========================
+# TOKEN DISPENSER
+# ==========================
+
+@app.route('/kiosk')
+def kiosk():
 
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -86,7 +95,7 @@ def generate_token():
     if last is None:
         number = 1
     else:
-        number = int(last[0][1:]) + 1
+        number = int(last[0]) + 1
 
     token = f"{number:03d}"
 
@@ -117,14 +126,12 @@ def next_token():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # Complete previous serving token
     cursor.execute("""
         UPDATE tokens
         SET status='Completed'
         WHERE status='Serving'
     """)
 
-    # Get next waiting token
     cursor.execute("""
         SELECT id, token
         FROM tokens
@@ -164,6 +171,7 @@ def next_token():
         "serving": token
     })
 
+
 # ==========================
 # Call Again
 # ==========================
@@ -198,6 +206,8 @@ def call_again():
     return jsonify({
         "token": row[0]
     })
+
+
 # ==========================
 # Call Specific Token
 # ==========================
@@ -225,20 +235,19 @@ def call_specific():
     if row is None:
 
         return jsonify({
-            "message":"Invalid Token"
+            "message": "Invalid Token"
         })
 
     socketio.emit(
         "serving_changed",
         {
-            "token":token
+            "token": token
         }
     )
 
     return jsonify({
-        "message":"Called"
+        "message": "Called"
     })
-
 # ==========================
 # Reset Queue
 # ==========================
@@ -292,7 +301,7 @@ def waiting():
 
 
 # ==========================
-# Doctor Dashboard
+# CALLING UNIT
 # ==========================
 
 @app.route('/operator')
@@ -302,13 +311,14 @@ def operator():
 
 
 # ==========================
-# Public Display
+# MAIN DISPLAY
 # ==========================
 
 @app.route('/display')
 def display():
 
     return render_template("display.html")
+
 
 # ==========================
 # Print Token
@@ -321,6 +331,8 @@ def print_token(token):
         "print.html",
         token=token
     )
+
+
 # ==========================
 # Main
 # ==========================
