@@ -220,6 +220,7 @@ margin-top:30px;
 line-height:1;
 
 }
+
 .manual-call{
 
 display:flex;
@@ -364,7 +365,7 @@ font-size:13px;
 
 <div class="header">
 
-<img src="{{ url_for('static', filename='logo.png') }}" class="logo">
+<img src="/logo.png" class="logo">
 
 <div class="header-title">
 
@@ -388,15 +389,16 @@ apps
 
 <a href="/">Main Display</a>
 
-<a href="/operator">Calling Unit</a>
+<a href="/operator.html">Calling Unit</a>
 
-<a href="/kiosk">Token Dispenser</a>
-
-</div>
+<a href="/kiosk.html">Token Dispenser</a>
 
 </div>
 
 </div>
+
+</div>
+
 
 <div class="management-content">
 
@@ -420,6 +422,7 @@ CURRENT TOKEN
 
 </div>
 
+
 <div class="manual-call">
 
 <input
@@ -436,6 +439,7 @@ Call Token
 </button>
 
 </div>
+
 
 <div class="actions">
 
@@ -467,26 +471,43 @@ Reset Queue
 
 </div>
 
+
 <div class="footer">
 
 © GTM4Health 2026
 
 </div>
 
+
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
 <script>
-    const socket = io();
 
-/* ==========================
-   Apps Menu
-========================== */
+/* ==========================================
+   RENDER BACKEND
+========================================== */
+
+const API_URL =
+    "https://token-management-system-cvo8.onrender.com";
+
+
+/* ==========================================
+   SOCKET.IO
+========================================== */
+
+const socket = io(API_URL);
+
+
+/* ==========================================
+   APPS MENU
+========================================== */
 
 function toggleMenu(event){
 
     event.stopPropagation();
 
-    const menu = document.getElementById("menu");
+    const menu =
+        document.getElementById("menu");
 
     menu.style.display =
         menu.style.display === "block"
@@ -495,40 +516,173 @@ function toggleMenu(event){
 
 }
 
+
 window.addEventListener("click", function(){
 
-    document.getElementById("menu").style.display = "none";
+    document.getElementById("menu").style.display =
+        "none";
 
 });
 
-/* ==========================
-   Calling Controls
-========================== */
+
+/* ==========================================
+   SOCKET CONNECTION
+========================================== */
+
+socket.on("connect", function(){
+
+    console.log(
+        "Connected to Render:",
+        socket.id
+    );
+
+});
+
+
+socket.on("connect_error", function(error){
+
+    console.error(
+        "Socket.IO connection error:",
+        error
+    );
+
+});
+
+
+socket.on("disconnect", function(){
+
+    console.log(
+        "Disconnected from Render"
+    );
+
+});
+
+
+/* ==========================================
+   LOAD CURRENT TOKEN
+========================================== */
+
+function loadCurrent(){
+
+    fetch(`${API_URL}/current`)
+
+        .then(response => {
+
+            if(!response.ok){
+
+                throw new Error(
+                    "Failed to load current token"
+                );
+
+            }
+
+            return response.json();
+
+        })
+
+        .then(data => {
+
+            document.getElementById("current").innerHTML =
+                data.token || "---";
+
+        })
+
+        .catch(error => {
+
+            console.error(
+                "Current token error:",
+                error
+            );
+
+            document.getElementById("current").innerHTML =
+                "---";
+
+        });
+
+}
+
+
+/* ==========================================
+   CALL NEXT TOKEN
+========================================== */
 
 function nextToken(){
 
-    fetch("/next",{
+    fetch(`${API_URL}/next`, {
+
         method:"POST"
+
+    })
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        console.log("Next token:", data);
+
+    })
+
+    .catch(error => {
+
+        console.error(
+            "Next token error:",
+            error
+        );
+
     });
 
 }
+
+
+/* ==========================================
+   CALL AGAIN
+========================================== */
 
 function callAgain(){
 
-    fetch("/call_again",{
+    fetch(`${API_URL}/call_again`, {
+
         method:"POST"
+
+    })
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        console.log("Call again:", data);
+
+    })
+
+    .catch(error => {
+
+        console.error(
+            "Call again error:",
+            error
+        );
+
     });
 
 }
+
+
+/* ==========================================
+   CALL SPECIFIC TOKEN
+========================================== */
 
 function callSpecific(){
 
     let token =
         document.getElementById("manualToken").value;
 
-    if(token === "") return;
+    if(token === ""){
 
-    fetch("/call_specific",{
+        return;
+
+    }
+
+
+    fetch(`${API_URL}/call_specific`, {
 
         method:"POST",
 
@@ -540,45 +694,109 @@ function callSpecific(){
             token:token
         })
 
+    })
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        console.log(
+            "Specific token:",
+            data
+        );
+
+    })
+
+    .catch(error => {
+
+        console.error(
+            "Specific token error:",
+            error
+        );
+
     });
 
-    document.getElementById("manualToken").value="";
+
+    document.getElementById("manualToken").value = "";
 
 }
+
+
+/* ==========================================
+   RESET QUEUE
+========================================== */
 
 function resetQueue(){
 
-    if(confirm("Reset the entire queue?")){
+    if(!confirm("Reset the entire queue?")){
 
-        fetch("/reset",{
-            method:"POST"
-        });
+        return;
 
     }
 
+
+    fetch(`${API_URL}/reset`, {
+
+        method:"POST"
+
+    })
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        console.log(
+            "Queue reset:",
+            data
+        );
+
+    })
+
+    .catch(error => {
+
+        console.error(
+            "Reset error:",
+            error
+        );
+
+    });
+
 }
 
-/* ==========================
-   Live Updates
-========================== */
 
-socket.on("connect", function(){
-
-    console.log("Connected");
-
-});
+/* ==========================================
+   LIVE SERVING TOKEN UPDATE
+========================================== */
 
 socket.on("serving_changed", function(data){
 
-    document.getElementById("current").innerHTML = data.token;
+    if(data && data.token){
+
+        document.getElementById("current").innerHTML =
+            data.token;
+
+    }
 
 });
+
+
+/* ==========================================
+   QUEUE RESET EVENT
+========================================== */
 
 socket.on("queue_reset", function(){
 
-    document.getElementById("current").innerHTML = "---";
+    document.getElementById("current").innerHTML =
+        "---";
 
 });
+
+
+/* ==========================================
+   INITIAL LOAD
+========================================== */
+
+loadCurrent();
 
 </script>
 
