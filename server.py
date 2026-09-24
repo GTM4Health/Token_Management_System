@@ -62,7 +62,6 @@ def init_db():
     conn.close()
 
 
-# Initialize database
 init_db()
 
 
@@ -105,6 +104,37 @@ def current_token():
     if row is None:
         return jsonify({
             "token": "---"
+        })
+
+    return jsonify({
+        "token": row[0]
+    })
+
+
+# ==========================
+# LATEST GENERATED TOKEN
+# ==========================
+
+@app.route('/latest', methods=['GET'])
+def latest_token():
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT token
+        FROM tokens
+        ORDER BY id DESC
+        LIMIT 1
+    """)
+
+    row = cursor.fetchone()
+
+    conn.close()
+
+    if row is None:
+        return jsonify({
+            "token": "000"
         })
 
     return jsonify({
@@ -204,7 +234,7 @@ def next_token():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # Mark currently serving token as completed
+    # Complete current serving token
     cursor.execute("""
         UPDATE tokens
         SET status='Completed'
@@ -228,13 +258,14 @@ def next_token():
         conn.close()
 
         return jsonify({
-            "message": "No waiting tokens"
+            "message": "No waiting tokens",
+            "serving": "---"
         })
 
     token_id = row[0]
     token = row[1]
 
-    # Set token as serving
+    # Make token serving
     cursor.execute("""
         UPDATE tokens
         SET status='Serving'
@@ -282,7 +313,8 @@ def call_again():
     if row is None:
 
         return jsonify({
-            "message": "No token serving"
+            "message": "No token serving",
+            "token": "---"
         })
 
     token = row[0]
@@ -340,14 +372,14 @@ def call_specific():
 
     token_id = row[0]
 
-    # Mark any currently serving token as completed
+    # Complete current serving token
     cursor.execute("""
         UPDATE tokens
         SET status='Completed'
         WHERE status='Serving'
     """)
 
-    # Make requested token the serving token
+    # Make requested token serving
     cursor.execute("""
         UPDATE tokens
         SET status='Serving'
@@ -382,9 +414,11 @@ def reset():
     cursor = conn.cursor()
 
     # Delete all tokens
-    cursor.execute("DELETE FROM tokens")
+    cursor.execute("""
+        DELETE FROM tokens
+    """)
 
-    # Reset token ID sequence
+    # Reset ID sequence
     cursor.execute("""
         DELETE FROM sqlite_sequence
         WHERE name='tokens'
@@ -397,7 +431,8 @@ def reset():
     socketio.emit("queue_reset")
 
     return jsonify({
-        "message": "Queue Reset Successfully"
+        "message": "Queue Reset Successfully",
+        "token": "000"
     })
 
 
