@@ -33,6 +33,11 @@ body{
     flex-direction:column;
 }
 
+
+/* ==========================
+   HEADER
+========================== */
+
 .header{
     width:100%;
     height:90px;
@@ -81,6 +86,11 @@ body{
     font-size:34px;
 }
 
+
+/* ==========================
+   MENU
+========================== */
+
 .menu{
     display:none;
     position:absolute;
@@ -105,6 +115,11 @@ body{
 .menu a:hover{
     background:#eef6fb;
 }
+
+
+/* ==========================
+   MAIN CONTENT
+========================== */
 
 .main-content{
     flex:1;
@@ -144,6 +159,11 @@ body{
     font-size:18px;
 }
 
+
+/* ==========================
+   FOOTER
+========================== */
+
 .footer{
     margin-top:auto;
     background:#0b4f7c;
@@ -157,26 +177,36 @@ body{
 
 </head>
 
+
 <body>
+
+
+<!-- ==========================
+     HEADER
+========================== -->
 
 <div class="header">
 
-    <!-- Vercel serves the logo -->
     <img src="/logo.png" class="logo">
 
     <div class="header-title">
         TOKEN DISPENSER
     </div>
 
+
     <div class="menu-container">
 
-        <button class="menu-btn" onclick="toggleMenu(event)">
+        <button
+            class="menu-btn"
+            onclick="toggleMenu(event)"
+        >
 
             <span class="material-symbols-outlined">
                 apps
             </span>
 
         </button>
+
 
         <div class="menu" id="menu">
 
@@ -199,6 +229,10 @@ body{
 </div>
 
 
+<!-- ==========================
+     MAIN
+========================== -->
+
 <div class="main-content">
 
     <div class="token-card">
@@ -207,9 +241,14 @@ body{
             YOUR TOKEN NUMBER
         </div>
 
-        <div id="token" class="generated-token">
+
+        <div
+            id="token"
+            class="generated-token"
+        >
             000
         </div>
+
 
         <div class="token-message">
             Please wait for your token to be called.
@@ -220,12 +259,20 @@ body{
 </div>
 
 
+<!-- ==========================
+     FOOTER
+========================== -->
+
 <div class="footer">
+
     © GTM4Health 2026
+
 </div>
 
 
-<!-- Socket.IO client -->
+<!-- ==========================
+     SOCKET.IO
+========================== -->
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
@@ -267,10 +314,64 @@ window.addEventListener("click", function(){
 
 
 /* ==========================================
+   LOAD LATEST TOKEN
+========================================== */
+
+async function loadLatestToken(){
+
+    try{
+
+        const response =
+            await fetch(
+                API_URL + "/latest"
+            );
+
+        if(!response.ok){
+
+            throw new Error(
+                "HTTP " + response.status
+            );
+
+        }
+
+        const data =
+            await response.json();
+
+
+        if(data.token){
+
+            document.getElementById("token").innerHTML =
+                data.token;
+
+        }
+
+    }
+
+    catch(error){
+
+        console.error(
+            "Failed to load latest token:",
+            error
+        );
+
+    }
+
+}
+
+
+/* ==========================================
+   LOAD TOKEN WHEN PAGE OPENS
+========================================== */
+
+loadLatestToken();
+
+
+/* ==========================================
    CONNECT TO RENDER SOCKET.IO
 ========================================== */
 
-const socket = io(API_URL);
+const socket =
+    io(API_URL);
 
 
 /* ==========================================
@@ -312,24 +413,34 @@ socket.on("disconnect", function(){
 
 socket.on("new_token", function(data){
 
-    if(!data || !data.token){
+    if(
+        !data ||
+        !data.token
+    ){
+
         return;
+
     }
+
 
     const token =
         data.token;
 
-    /*
-        Update displayed token
-    */
+
+    /* Update displayed token */
 
     document.getElementById("token").innerHTML =
         token;
 
 
     /*
-        Open printable token page
-        on Vercel
+
+       Open printable token page.
+
+       Example:
+
+       /print.html?token=001
+
     */
 
     window.open(
