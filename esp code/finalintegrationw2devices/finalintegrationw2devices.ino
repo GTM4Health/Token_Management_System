@@ -2,545 +2,368 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <WebServer.h>
+#include <DNSServer.h>
 #include <Preferences.h>
-
-// WiFi Credentials (Loaded from Flash)
 
 String ssid = "";
 String password = "";
+String serverURL = "";
 
-
-// Flask Server IP
-String serverIP = "";
-
-// Web server
 WebServer webServer(80);
+DNSServer dnsServer;
+const byte DNS_PORT = 53;
 
-// Flash storage
 Preferences preferences;
-const char webpage[] PROGMEM = R"rawliteral(
+bool apMode = false;
+
+// ======================================================
+// CAPTIVE PORTAL — Setup Page
+// ======================================================
+
+const char setupPage[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html>
-
 <head>
-
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Token Management Setup</title>
-
+<title>TMS WiFi Setup</title>
 <style>
-
-body{
-font-family:Arial;
-margin:40px;
-background:#f5f5f5;
-}
-
-.container{
-background:white;
-padding:20px;
-border-radius:10px;
-max-width:400px;
-margin:auto;
-box-shadow:0 0 10px gray;
-}
-
-input{
-width:100%;
-padding:10px;
-margin-top:5px;
-margin-bottom:15px;
-}
-
-button{
-width:100%;
-padding:12px;
-background:#007bff;
-color:white;
-border:none;
-font-size:18px;
-border-radius:5px;
-}
-
+body{font-family:Arial;margin:0;padding:20px;background:#eef6fb;display:flex;justify-content:center;align-items:center;min-height:100vh;box-sizing:border-box;}
+.container{background:white;padding:30px;border-radius:12px;width:100%;max-width:400px;box-shadow:0 4px 20px rgba(0,0,0,.15);border-top:6px solid #1683c4;box-sizing:border-box;}
+h2{color:#0b4f7c;margin:0 0 20px 0;text-align:center;font-size:20px;}
+label{color:#607080;font-size:13px;font-weight:600;letter-spacing:1px;display:block;margin-top:14px;}
+input{width:100%;padding:12px;margin-top:5px;border:1px solid #c6d0d8;border-radius:8px;font-size:15px;box-sizing:border-box;}
+button{width:100%;padding:14px;margin-top:20px;background:#0b4f7c;color:white;border:none;font-size:17px;border-radius:8px;cursor:pointer;font-weight:600;}
+.hint{color:#888;font-size:12px;text-align:center;margin-top:10px;}
 </style>
-
 </head>
-
 <body>
-
 <div class="container">
-
-<h2>Token Management WiFi Setup</h2>
-
-<form action="/save">
-
-SSID
-
-<input name="ssid">
-
-Password
-
-<input type="password" name="password">
-
-Server IP
-
-<input name="server" value="">
-
-<button type="submit">
-
-Save
-
-</button>
-
-</form>
-
+  <h2>&#128268; TMS WiFi Setup</h2>
+  <form action="/save" method="GET">
+    <label>WIFI NAME (SSID)</label>
+    <input name="ssid" placeholder="Your WiFi name" required>
+    <label>PASSWORD</label>
+    <input type="password" name="password" placeholder="WiFi password">
+    <label>SERVER URL</label>
+    <input name="server" value="https://token-management-system-cvo8.onrender.com" required>
+    <button type="submit">Connect &amp; Save</button>
+  </form>
+  <p class="hint">Leave password blank for open networks.</p>
 </div>
-
 </body>
-
 </html>
-
 )rawliteral";
 
 // ======================================================
-// DEVICE TYPE
+// CAPTIVE PORTAL — Saved Page (auto-redirects to Vercel)
 // ======================================================
 
+const char savedPage[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="5;url=https://gtm-tms.vercel.app">
+<title>Settings Saved!</title>
+<style>
+body{font-family:Arial;margin:0;background:#eef6fb;display:flex;justify-content:center;align-items:center;min-height:100vh;}
+.box{background:white;padding:40px 30px;border-radius:12px;text-align:center;border-top:6px solid #27ae60;max-width:360px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,.12);}
+h2{color:#27ae60;margin:0 0 12px 0;}
+p{color:#555;margin:8px 0;line-height:1.5;}
+a{color:#1683c4;text-decoration:none;}
+.count{font-size:40px;font-weight:700;color:#0b4f7c;margin:16px 0;}
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>&#10003; Settings Saved!</h2>
+  <p>ESP32 is connecting to your WiFi...</p>
+  <div class="count" id="c">5</div>
+  <p>Redirecting to<br><a href="https://gtm-tms.vercel.app">gtm-tms.vercel.app</a></p>
+</div>
+<script>
+var n=5;
+var t=setInterval(function(){
+  n--;document.getElementById('c').innerText=n;
+  if(n<=0){clearInterval(t);window.location.href='https://gtm-tms.vercel.app';}
+},1000);
+</script>
+</body>
+</html>
+)rawliteral";
 
-const int buttonPin = 4;
-const int nextButton = 15;      // D15
-const int againButton = 13;     // D13
-const int resetButton = 14;     // D14
+// ======================================================
+// BUTTON PINS
+// ======================================================
 
+const int buttonPin   = 4;
+const int nextButton  = 15;
+const int againButton = 13;
+const int resetButton = 14;
 
-
-bool lastButtonState = HIGH;
-unsigned long lastPressTime = 0;
+bool lastButtonState    = HIGH;
+unsigned long lastPressTime   = 0;
 unsigned long resetPressStart = 0;
-void saveWiFi()
-{
-    preferences.begin("wifi", false);
 
-    preferences.putString("ssid", ssid);
+// ======================================================
+// FLASH STORAGE
+// ======================================================
+
+void saveWiFi() {
+    preferences.begin("wifi", false);
+    preferences.putString("ssid",     ssid);
     preferences.putString("password", password);
-
-    preferences.putString("server", serverIP);
-
+    preferences.putString("server",   serverURL);
     preferences.end();
 }
-bool loadWiFi()
-{
+
+bool loadWiFi() {
     preferences.begin("wifi", true);
-
-    ssid = preferences.getString("ssid", "");
-    password = preferences.getString("password", "");
-
-    serverIP = preferences.getString("server", "");
-
+    ssid      = preferences.getString("ssid",     "");
+    password  = preferences.getString("password", "");
+    serverURL = preferences.getString("server",   "");
     preferences.end();
-
-    if (ssid == "" || serverIP == "")
-    return false;
-
-return true;
+    if (ssid == "" || serverURL == "") return false;
+    return true;
 }
-void clearWiFi()
-{
+
+void clearWiFi() {
     preferences.begin("wifi", false);
-
     preferences.clear();
-
     preferences.end();
-
     Serial.println("Saved WiFi Cleared!");
 }
+
+// ======================================================
+// WIFI CONNECTION
+// ======================================================
+
 void connectWiFi() {
-
-  Serial.println();
-  Serial.println("Connecting to saved WiFi...");
-
-  WiFi.mode(WIFI_STA);
-
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-
-  WiFi.begin(ssid.c_str(), password.c_str());
-
-  unsigned long startTime = millis();
-
-  while (WiFi.status() != WL_CONNECTED &&
-         millis() - startTime < 15000) {
-
-    delay(500);
-    Serial.print(".");
-
-  }
-
-  if (WiFi.status() == WL_CONNECTED) {
-
     Serial.println();
-    Serial.println("==============================");
-    Serial.println("WiFi Connected!");
-    Serial.print("ESP32 IP : ");
-    Serial.println(WiFi.localIP());
-
-    Serial.print("Connected SSID : ");
-    Serial.println(WiFi.SSID());
-
-    Serial.print("Server IP : ");
-    Serial.println(serverIP);
-
-    Serial.println("==============================");
-
-  }
-
-  else {
-
-    Serial.println();
-    Serial.println("Connection Failed.");
-
-  }
-
+    Serial.println("Connecting to saved WiFi...");
+    WiFi.mode(WIFI_STA);
+    Serial.print("Connecting to "); Serial.println(ssid);
+    WiFi.begin(ssid.c_str(), password.c_str());
+    unsigned long startTime = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - startTime < 15000) {
+        delay(500); Serial.print(".");
+    }
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println();
+        Serial.println("=========================================");
+        Serial.println("WiFi Connected!");
+        Serial.print("ESP32 IP : "); Serial.println(WiFi.localIP());
+        Serial.print("Connected SSID : "); Serial.println(WiFi.SSID());
+        Serial.print("Server URL : "); Serial.println(serverURL);
+        Serial.println("=========================================");
+    } else {
+        Serial.println();
+        Serial.println("Connection Failed.");
+    }
 }
+
+// ======================================================
+// START AP (Captive Portal)
+// ======================================================
+
 void startAP() {
+    apMode = true;
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP("TMS-Setup");   // open network, no password
+    delay(500);
 
-  WiFi.mode(WIFI_AP);
+    IPAddress apIP = WiFi.softAPIP();
+    Serial.println();
+    Serial.println("=========================================");
+    Serial.println("Configuration Mode");
+    Serial.println("SSID : TMS-Setup  (no password needed)");
+    Serial.print("Open : http://"); Serial.println(apIP);
+    Serial.println("=========================================");
 
-  WiFi.softAP("TMS_SETUP", "token123");
+    // DNS captures ALL domains → ESP IP → triggers captive portal popup
+    dnsServer.start(DNS_PORT, "*", apIP);
 
-  Serial.println();
-  Serial.println("==============================");
-  Serial.println("Configuration Mode");
-  Serial.println("SSID : TMS_SETUP");
-  Serial.println("Password : token123");
-  Serial.print("Open : http://");
-  Serial.println(WiFi.softAPIP());
-  Serial.println("==============================");
+    webServer.on("/", []() {
+        webServer.send_P(200, "text/html", setupPage);
+    });
 
-  // Home Page
-  webServer.on("/", []() {
+    // Captive portal detection — Android, iOS, Windows all hit these
+    webServer.on("/generate_204",        []() { webServer.sendHeader("Location", "/"); webServer.send(302, "text/plain", ""); });
+    webServer.on("/gen_204",             []() { webServer.sendHeader("Location", "/"); webServer.send(302, "text/plain", ""); });
+    webServer.on("/hotspot-detect.html", []() { webServer.sendHeader("Location", "/"); webServer.send(302, "text/plain", ""); });
+    webServer.on("/ncsi.txt",            []() { webServer.sendHeader("Location", "/"); webServer.send(302, "text/plain", ""); });
+    webServer.on("/connecttest.txt",     []() { webServer.sendHeader("Location", "/"); webServer.send(302, "text/plain", ""); });
+    webServer.on("/redirect",            []() { webServer.sendHeader("Location", "/"); webServer.send(302, "text/plain", ""); });
+    webServer.onNotFound([]() {
+        webServer.sendHeader("Location", "http://192.168.4.1/");
+        webServer.send(302, "text/plain", "");
+    });
 
-    webServer.send(200, "text/html", webpage);
+    webServer.on("/save", []() {
+        if (webServer.hasArg("ssid") && webServer.hasArg("server")) {
+            ssid      = webServer.arg("ssid");
+            password  = webServer.arg("password");
+            serverURL = webServer.arg("server");
+            saveWiFi();
+            webServer.send_P(200, "text/html", savedPage);
+            delay(6000);
+            ESP.restart();
+        } else {
+            webServer.send(400, "text/plain", "Missing ssid or server");
+        }
+    });
 
-  });
-
-  // Save WiFi Settings
-  webServer.on("/save", []() {
-
-    ssid = webServer.arg("ssid");
-    password = webServer.arg("password");
-
-    serverIP = webServer.arg("server");
-
-    saveWiFi();
-
-    webServer.send(200,
-                   "text/html",
-                   "<h2>Settings Saved!<br>Restarting ESP32...</h2>");
-
-    delay(2000);
-
-    ESP.restart();
-
-  });
-
-  webServer.begin();
-
+    webServer.begin();
+    Serial.println("Web server started in AP mode");
 }
+
+// ======================================================
+// API CALLS
+// ======================================================
 
 void generateToken() {
-
-  if (WiFi.status() != WL_CONNECTED) {
-
-    Serial.println("WiFi Disconnected!");
-    return;
-
-  }
-
-  HTTPClient http;
-
-String url = "http://" + serverIP + ":5000/generate";
-
-Serial.print("Server IP = ");
-Serial.println(serverIP);
-
-Serial.print("URL = ");
-Serial.println(url);
-
-http.begin(url);
-
-  http.addHeader("Content-Type", "application/json");
-
-  int responseCode = http.POST("");
-
-  Serial.print("HTTP Response Code: ");
-  Serial.println(responseCode);
-
-  if (responseCode == 200) {
-
-    String payload = http.getString();
-
-    Serial.println("Server Response:");
-    Serial.println(payload);
-
-    JsonDocument doc;
-
-    DeserializationError error = deserializeJson(doc, payload);
-
-    if (!error) {
-
-      String token = doc["token"];
-
-      Serial.println("----------------------------");
-      Serial.print("Generated Token : ");
-      Serial.println(token);
-      Serial.println("----------------------------");
-
+    if (WiFi.status() != WL_CONNECTED) { Serial.println("WiFi Disconnected!"); return; }
+    HTTPClient http;
+    String url = serverURL + "/generate";   // FIX: full HTTPS URL, no port
+    Serial.print("URL = "); Serial.println(url);
+    http.begin(url);
+    http.addHeader("Content-Type", "application/json");
+    int responseCode = http.POST("{}");
+    Serial.print("HTTP Response Code: "); Serial.println(responseCode);
+    if (responseCode == 200) {
+        String payload = http.getString();
+        Serial.println(payload);
+        JsonDocument doc;
+        if (!deserializeJson(doc, payload)) {
+            Serial.print("Generated Token : "); Serial.println((const char*)doc["token"]);
+        }
     } else {
-
-      Serial.println("JSON Parse Failed");
-
+        Serial.println("Failed to contact server.");
     }
-
-  } else {
-
-    Serial.println("Failed to contact server.");
-
-  }
-
-  http.end();
-
+    http.end();
 }
+
 void callNext() {
-
-  Serial.println("CALL NEXT BUTTON");
-
-  if (WiFi.status() != WL_CONNECTED) {
-
-    Serial.println("WiFi Disconnected!");
-    return;
-
-  }
-
-  HTTPClient http;
-
-  String url = "http://" + serverIP + ":5000/next";
-
-  Serial.print("URL: ");
-  Serial.println(url);
-
-  http.begin(url);
-
-  int responseCode = http.POST("");
-
-  Serial.print("Response Code: ");
-  Serial.println(responseCode);
-
-  if (responseCode > 0) {
-
-    Serial.println(http.getString());
-
-  }
-
-  http.end();
-
+    if (WiFi.status() != WL_CONNECTED) { Serial.println("WiFi Disconnected!"); return; }
+    HTTPClient http;
+    String url = serverURL + "/next";
+    http.begin(url);
+    int responseCode = http.POST("{}");
+    Serial.print("Next Response Code: "); Serial.println(responseCode);
+    if (responseCode > 0) Serial.println(http.getString());
+    http.end();
 }
 
 void callAgain() {
-
-  Serial.println("CALL AGAIN BUTTON");
-
-  if (WiFi.status() != WL_CONNECTED) {
-
-    Serial.println("WiFi Disconnected!");
-    return;
-
-  }
-
-  HTTPClient http;
-
-  String url = "http://" + serverIP + ":5000/call_again";
-
-  Serial.print("URL: ");
-  Serial.println(url);
-
-  http.begin(url);
-
-  int responseCode = http.POST("");
-
-  Serial.print("Response Code: ");
-  Serial.println(responseCode);
-
-  if (responseCode > 0) {
-
-    Serial.println(http.getString());
-
-  }
-
-  http.end();
-
+    if (WiFi.status() != WL_CONNECTED) { Serial.println("WiFi Disconnected!"); return; }
+    HTTPClient http;
+    String url = serverURL + "/call_again";
+    http.begin(url);
+    int responseCode = http.POST("{}");
+    Serial.print("Again Response Code: "); Serial.println(responseCode);
+    if (responseCode > 0) Serial.println(http.getString());
+    http.end();
 }
 
 void resetQueue() {
-
-  Serial.println("RESET BUTTON");
-
-  if (WiFi.status() != WL_CONNECTED) {
-
-    Serial.println("WiFi Disconnected!");
-    return;
-
-  }
-
-  HTTPClient http;
-
-  String url = "http://" + serverIP + ":5000/reset";
-
-  Serial.print("URL: ");
-  Serial.println(url);
-
-  http.begin(url);
-
-  int responseCode = http.POST("");
-
-  Serial.print("Response Code: ");
-  Serial.println(responseCode);
-
-  if (responseCode > 0) {
-
-    Serial.println(http.getString());
-
-  }
-
-  http.end();
-
+    if (WiFi.status() != WL_CONNECTED) { Serial.println("WiFi Disconnected!"); return; }
+    HTTPClient http;
+    String url = serverURL + "/reset";
+    http.begin(url);
+    int responseCode = http.POST("{}");
+    Serial.print("Reset Response Code: "); Serial.println(responseCode);
+    if (responseCode > 0) Serial.println(http.getString());
+    http.end();
 }
+
+// ======================================================
+// SETUP
+// ======================================================
+
 void setup() {
-
-  Serial.begin(115200);
-
-  delay(1000);
-
-  // Initialize ALL buttons
-  pinMode(buttonPin, INPUT_PULLUP);
-
-  pinMode(nextButton, INPUT_PULLUP);
-  pinMode(againButton, INPUT_PULLUP);
-  pinMode(resetButton, INPUT_PULLUP);
-
-  Serial.println();
-  Serial.println("Starting Token Management System...");
-
-  if (loadWiFi()) {
-
-    Serial.println("Saved WiFi Found.");
-
-    connectWiFi();
-
-    if (WiFi.status() != WL_CONNECTED) {
-
-        Serial.println("Saved WiFi not available.");
-        Serial.println("Starting Configuration Portal...");
-
+    Serial.begin(115200);
+    delay(1000);
+    pinMode(buttonPin,   INPUT_PULLUP);
+    pinMode(nextButton,  INPUT_PULLUP);
+    pinMode(againButton, INPUT_PULLUP);
+    pinMode(resetButton, INPUT_PULLUP);
+    Serial.println();
+    Serial.println("Starting Token Management System...");
+    if (loadWiFi()) {
+        Serial.println("Saved WiFi Found.");
+        connectWiFi();
+        if (WiFi.status() != WL_CONNECTED) {
+            Serial.println("Saved WiFi not available. Starting Configuration Portal...");
+            startAP();
+        }
+    } else {
+        Serial.println("No WiFi Credentials Found.");
         startAP();
-
     }
-
 }
-else {
 
-    Serial.println("No WiFi Credentials Found.");
-
-    startAP();
-
-}
-}
+// ======================================================
+// LOOP
+// ======================================================
 
 void loop() {
-
-  webServer.handleClient();
-
-  // ==========================
-  // TOKEN BUTTON
-  // ==========================
-  bool currentButtonState = digitalRead(buttonPin);
-
-  if (currentButtonState == LOW && lastButtonState == HIGH) {
-
-    if (millis() - lastPressTime > 300) {
-
-      lastPressTime = millis();
-
-      Serial.println("TOKEN BUTTON");
-
-      generateToken();
-
+    if (apMode) {
+        dnsServer.processNextRequest();
+        webServer.handleClient();
+        return;
     }
 
-  }
+    webServer.handleClient();
 
-  lastButtonState = currentButtonState;
-
-  // ==========================
-  // CALL NEXT
-  // ==========================
-  if (digitalRead(nextButton) == LOW) {
-
-    Serial.println("NEXT PRESSED");
-
-    callNext();
-
-    delay(300);
-
-    while (digitalRead(nextButton) == LOW);
-
-  }
-
-  // ==========================
-  // CALL AGAIN
-  // ==========================
-  if (digitalRead(againButton) == LOW) {
-
-    Serial.println("CALL AGAIN PRESSED");
-
-    callAgain();
-
-    delay(300);
-
-    while (digitalRead(againButton) == LOW);
-
-  }
-
-  // ==========================
-  // RESET
-  // ==========================
-  if (digitalRead(resetButton) == LOW) {
-
-    resetPressStart = millis();
-
-    while (digitalRead(resetButton) == LOW) {
-
-        if (millis() - resetPressStart >= 5000) {
-
-            Serial.println("RESETTING QUEUE...");
-
-            resetQueue();
-
-            while (digitalRead(resetButton) == LOW);
-
-            delay(300);
-
-            break;
-
+    // Token button
+    bool currentButtonState = digitalRead(buttonPin);
+    if (currentButtonState == LOW && lastButtonState == HIGH) {
+        if (millis() - lastPressTime > 300) {
+            lastPressTime = millis();
+            Serial.println("TOKEN BUTTON");
+            generateToken();
         }
+    }
+    lastButtonState = currentButtonState;
 
+    // Call Next
+    if (digitalRead(nextButton) == LOW) {
+        Serial.println("NEXT PRESSED");
+        callNext();
+        delay(300);
+        while (digitalRead(nextButton) == LOW);
     }
 
-    if (millis() - resetPressStart < 5000) {
-
-        Serial.println("Pressed for less than 5 seconds.");
-        Serial.println("Hold RESET for 5 seconds to reset queue.");
-
+    // Call Again
+    if (digitalRead(againButton) == LOW) {
+        Serial.println("CALL AGAIN PRESSED");
+        callAgain();
+        delay(300);
+        while (digitalRead(againButton) == LOW);
     }
-  }
+
+    // Reset (hold 5 seconds)
+    if (digitalRead(resetButton) == LOW) {
+        resetPressStart = millis();
+        while (digitalRead(resetButton) == LOW) {
+            if (millis() - resetPressStart >= 5000) {
+                Serial.println("RESETTING QUEUE...");
+                resetQueue();
+                while (digitalRead(resetButton) == LOW);
+                delay(300);
+                break;
+            }
+        }
+        if (millis() - resetPressStart < 5000) {
+            Serial.println("Hold RESET for 5 seconds to reset queue.");
+        }
+    }
+
+    // Reconnect if WiFi drops
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("WiFi lost, reconnecting...");
+        connectWiFi();
+    }
 }
