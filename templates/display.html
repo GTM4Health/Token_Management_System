@@ -16,6 +16,11 @@
     box-sizing:border-box;
 }
 
+html,body{
+    height:100%;
+    overflow:hidden;
+}
+
 body{
     font-family:Arial,"Segoe UI",sans-serif;
     background:#eef6fb;
@@ -23,9 +28,10 @@ body{
 }
 
 .page{
-    min-height:100vh;
+    height:100vh;
     display:flex;
     flex-direction:column;
+    overflow:hidden;
 }
 
 .header{
@@ -41,13 +47,14 @@ body{
 }
 
 .logo{
-    height:48px;
+    height:56px;
     width:auto;
     margin-right:30px;
+    object-fit:contain;
 }
 
 .demo-logo{
-    height:60px;
+    height:64px;
     width:auto;
     position:absolute;
     left:50%;
@@ -113,11 +120,13 @@ body{
 
 .display-content{
     flex:1;
+    min-height:0;
     display:grid;
     grid-template-columns:1.5fr .7fr;
     gap:28px;
     padding:35px 5vw;
     align-items:start;
+    overflow:hidden;
 }
 
 .current-section{
@@ -160,7 +169,8 @@ body{
     padding:35px;
     display:flex;
     flex-direction:column;
-    max-height:calc(100vh - 160px);
+    max-height:calc(100vh - 90px - 52px - 70px);
+    overflow:hidden;
 }
 
 .queue-title{
@@ -205,13 +215,52 @@ body{
     opacity:.6;
 }
 
+.queue-count{
+    font-size:13px;
+    letter-spacing:2px;
+    opacity:.75;
+    margin-top:10px;
+    flex-shrink:0;
+}
+
 .footer{
     width:100%;
+    height:52px;
     background:#0b4f7c;
     color:white;
     text-align:center;
-    padding:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     font-size:13px;
+    flex-shrink:0;
+}
+
+/* ---------- Reset Toast ---------- */
+
+.toast{
+    display:none;
+    position:fixed;
+    top:110px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#0b4f7c;
+    color:white;
+    padding:16px 32px;
+    border-radius:10px;
+    font-size:18px;
+    font-weight:600;
+    box-shadow:0 6px 24px rgba(0,0,0,.25);
+    z-index:9999;
+    white-space:nowrap;
+    animation:fadeInOut 3s ease forwards;
+}
+
+@keyframes fadeInOut{
+    0%  { opacity:0; transform:translateX(-50%) translateY(-10px); }
+    15% { opacity:1; transform:translateX(-50%) translateY(0); }
+    70% { opacity:1; }
+    100%{ opacity:0; }
 }
 
 @media(max-width:768px){
@@ -309,6 +358,10 @@ body{
                 WAITING QUEUE
             </div>
 
+            <div id="queue-count" class="queue-count">
+                0 WAITING
+            </div>
+
             <div id="queue" class="queue-list"></div>
 
         </div>
@@ -320,6 +373,8 @@ body{
     </div>
 
 </div>
+
+<div id="toast" class="toast">All Tokens have been Reset</div>
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
@@ -463,7 +518,12 @@ socket.on("queue_reset", function(){
     document.getElementById("serving").innerHTML =
         "---";
 
+    document.getElementById("queue-count").innerHTML =
+        "0 WAITING";
+
     loadWaiting();
+
+    showToast();
 
 });
 
@@ -529,6 +589,28 @@ function speakToken(token){
 
 
 /* ==========================================
+   SHOW TOAST NOTIFICATION
+========================================== */
+
+function showToast(){
+
+    const toast = document.getElementById("toast");
+
+    toast.style.display = "block";
+    toast.style.animation = "none";
+
+    void toast.offsetWidth; /* reflow to restart animation */
+
+    toast.style.animation = "fadeInOut 3s ease forwards";
+
+    setTimeout(function(){
+        toast.style.display = "none";
+    }, 3000);
+
+}
+
+
+/* ==========================================
    LOAD WAITING QUEUE
 ========================================== */
 
@@ -555,7 +637,12 @@ function loadWaiting(){
             const queue =
                 document.getElementById("queue");
 
+            const countEl =
+                document.getElementById("queue-count");
+
             if(!data || data.length === 0){
+
+                countEl.innerHTML = "0 WAITING";
 
                 queue.innerHTML =
                     '<div class="queue-empty">' +
@@ -565,6 +652,9 @@ function loadWaiting(){
                 return;
 
             }
+
+            countEl.innerHTML =
+                data.length + " WAITING";
 
             let html = "";
 
