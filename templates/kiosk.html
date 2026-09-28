@@ -466,22 +466,19 @@ socket.on("new_token", function(data){
         token;
 
 
-    /*
+    /* Open print popup only if enabled (set via ESP32 setup page) */
 
-       Open printable token page.
+    var printEnabled = localStorage.getItem("printPopup");
 
-       Example:
+    if(printEnabled !== "0"){
 
-       /print.html?token=001
+        window.open(
+            "/print/" + encodeURIComponent(token),
+            "_blank",
+            "width=420,height=700"
+        );
 
-    */
-
-    window.open(
-        "/print.html?token=" +
-        encodeURIComponent(token),
-        "_blank",
-        "width=420,height=700"
-    );
+    }
 
 });
 
