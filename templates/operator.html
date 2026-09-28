@@ -798,6 +798,17 @@ socket.on("queue_reset", function(){
 
 loadCurrent();
 
+
+/* ==========================================
+   AJAX POLLING FALLBACK (every 5 seconds)
+   Keeps current token in sync even if
+   Socket.IO events are missed.
+========================================== */
+
+setInterval(function(){
+    loadCurrent();
+}, 5000);
+
 </script>
 
 </body>
