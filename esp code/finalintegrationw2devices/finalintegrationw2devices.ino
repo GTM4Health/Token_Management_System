@@ -8,6 +8,7 @@
 String ssid = "";
 String password = "";
 String serverURL = "";
+bool printPopupEnabled = true;   // default: print popup ON
 
 WebServer webServer(80);
 DNSServer dnsServer;
@@ -26,27 +27,40 @@ const char setupPage[] PROGMEM = R"rawliteral(
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TMS WiFi Setup</title>
+<title>GTM4Health TMS Setup</title>
 <style>
 body{font-family:Arial;margin:0;padding:20px;background:#eef6fb;display:flex;justify-content:center;align-items:center;min-height:100vh;box-sizing:border-box;}
 .container{background:white;padding:30px;border-radius:12px;width:100%;max-width:400px;box-shadow:0 4px 20px rgba(0,0,0,.15);border-top:6px solid #1683c4;box-sizing:border-box;}
-h2{color:#0b4f7c;margin:0 0 20px 0;text-align:center;font-size:20px;}
+h2{color:#0b4f7c;margin:0 0 6px 0;text-align:center;font-size:20px;}
+.sub{color:#607080;font-size:13px;text-align:center;margin-bottom:20px;letter-spacing:1px;}
 label{color:#607080;font-size:13px;font-weight:600;letter-spacing:1px;display:block;margin-top:14px;}
-input{width:100%;padding:12px;margin-top:5px;border:1px solid #c6d0d8;border-radius:8px;font-size:15px;box-sizing:border-box;}
+input[type=text],input[type=password]{width:100%;padding:12px;margin-top:5px;border:1px solid #c6d0d8;border-radius:8px;font-size:15px;box-sizing:border-box;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding:12px 14px;background:#f4f8fb;border-radius:8px;border:1px solid #dde6ed;}
+.toggle-label{color:#12314d;font-size:14px;font-weight:600;}
+.toggle-sub{color:#8a9baa;font-size:11px;margin-top:2px;}
+input[type=checkbox]{width:20px;height:20px;cursor:pointer;accent-color:#0b4f7c;}
 button{width:100%;padding:14px;margin-top:20px;background:#0b4f7c;color:white;border:none;font-size:17px;border-radius:8px;cursor:pointer;font-weight:600;}
 .hint{color:#888;font-size:12px;text-align:center;margin-top:10px;}
 </style>
 </head>
 <body>
 <div class="container">
-  <h2>&#128268; TMS WiFi Setup</h2>
+  <h2>&#128268; GTM4Health TMS</h2>
+  <div class="sub">WIFI SETUP</div>
   <form action="/save" method="GET">
     <label>WIFI NAME (SSID)</label>
-    <input name="ssid" placeholder="Your WiFi name" required>
+    <input type="text" name="ssid" placeholder="Your WiFi name" required>
     <label>PASSWORD</label>
     <input type="password" name="password" placeholder="WiFi password">
     <label>SERVER URL</label>
-    <input name="server" value="https://token-management-system-cvo8.onrender.com" required>
+    <input type="text" name="server" value="https://token-management-system-cvo8.onrender.com" required>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Print Pop-up</div>
+        <div class="toggle-sub">Auto-open print window on token dispenser</div>
+      </div>
+      <input type="checkbox" name="printpopup" value="1" checked>
+    </div>
     <button type="submit">Connect &amp; Save</button>
   </form>
   <p class="hint">Leave password blank for open networks.</p>
@@ -65,7 +79,6 @@ const char savedPage[] PROGMEM = R"rawliteral(
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="refresh" content="5;url=https://gtm-tms.vercel.app">
 <title>Settings Saved!</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef6fb;display:flex;justify-content:center;align-items:center;min-height:100vh;}
@@ -84,10 +97,15 @@ a{color:#1683c4;text-decoration:none;}
   <p>Redirecting to<br><a href="https://gtm-tms.vercel.app">gtm-tms.vercel.app</a></p>
 </div>
 <script>
+var PRINT_ENABLED = "PRINT_FLAG";
 var n=5;
 var t=setInterval(function(){
   n--;document.getElementById('c').innerText=n;
-  if(n<=0){clearInterval(t);window.location.href='https://gtm-tms.vercel.app';}
+  if(n<=0){
+    clearInterval(t);
+    localStorage.setItem('printPopup', PRINT_ENABLED);
+    window.location.href='https://gtm-tms.vercel.app/kiosk';
+  }
 },1000);
 </script>
 </body>
@@ -103,9 +121,10 @@ const int nextButton  = 15;
 const int againButton = 13;
 const int resetButton = 14;
 
-bool lastButtonState    = HIGH;
-unsigned long lastPressTime   = 0;
-unsigned long resetPressStart = 0;
+bool lastButtonState      = HIGH;
+unsigned long lastPressTime     = 0;
+unsigned long resetPressStart   = 0;
+unsigned long buttonPressStart  = 0;   // tracks GPIO4 hold duration
 
 // ======================================================
 // FLASH STORAGE
@@ -113,17 +132,19 @@ unsigned long resetPressStart = 0;
 
 void saveWiFi() {
     preferences.begin("wifi", false);
-    preferences.putString("ssid",     ssid);
-    preferences.putString("password", password);
-    preferences.putString("server",   serverURL);
+    preferences.putString("ssid",        ssid);
+    preferences.putString("password",    password);
+    preferences.putString("server",      serverURL);
+    preferences.putBool("printpopup",    printPopupEnabled);
     preferences.end();
 }
 
 bool loadWiFi() {
     preferences.begin("wifi", true);
-    ssid      = preferences.getString("ssid",     "");
-    password  = preferences.getString("password", "");
-    serverURL = preferences.getString("server",   "");
+    ssid             = preferences.getString("ssid",      "");
+    password         = preferences.getString("password",  "");
+    serverURL        = preferences.getString("server",    "");
+    printPopupEnabled = preferences.getBool("printpopup", true);
     preferences.end();
     if (ssid == "" || serverURL == "") return false;
     return true;
@@ -171,14 +192,14 @@ void connectWiFi() {
 void startAP() {
     apMode = true;
     WiFi.mode(WIFI_AP);
-    WiFi.softAP("TMS-Setup");   // open network, no password
+    WiFi.softAP("GTM4Health Unit-1");   // open network, no password
     delay(500);
 
     IPAddress apIP = WiFi.softAPIP();
     Serial.println();
     Serial.println("=========================================");
     Serial.println("Configuration Mode");
-    Serial.println("SSID : TMS-Setup  (no password needed)");
+    Serial.println("SSID : GTM4Health Unit-1  (no password needed)");
     Serial.print("Open : http://"); Serial.println(apIP);
     Serial.println("=========================================");
 
@@ -203,11 +224,19 @@ void startAP() {
 
     webServer.on("/save", []() {
         if (webServer.hasArg("ssid") && webServer.hasArg("server")) {
-            ssid      = webServer.arg("ssid");
-            password  = webServer.arg("password");
-            serverURL = webServer.arg("server");
+            ssid              = webServer.arg("ssid");
+            password          = webServer.arg("password");
+            serverURL         = webServer.arg("server");
+            printPopupEnabled = webServer.hasArg("printpopup") &&
+                                webServer.arg("printpopup") == "1";
             saveWiFi();
-            webServer.send_P(200, "text/html", savedPage);
+            Serial.print("Print Popup: ");
+            Serial.println(printPopupEnabled ? "ENABLED" : "DISABLED");
+
+            // Build page dynamically so PRINT_FLAG is substituted correctly
+            String page = String(savedPage);
+            page.replace("PRINT_FLAG", printPopupEnabled ? "1" : "0");
+            webServer.send(200, "text/html", page);
             delay(6000);
             ESP.restart();
         } else {
@@ -317,23 +346,50 @@ void loop() {
 
     webServer.handleClient();
 
-    // Token button
+    // ── GPIO 4 : Token button (short press) / WiFi config (hold 10 s) ──
     bool currentButtonState = digitalRead(buttonPin);
+
     if (currentButtonState == LOW && lastButtonState == HIGH) {
-        if (millis() - lastPressTime > 300) {
-            lastPressTime = millis();
+        // Button just pressed down — record start
+        buttonPressStart = millis();
+    }
+
+    if (currentButtonState == HIGH && lastButtonState == LOW) {
+        // Button just released — check hold duration
+        unsigned long heldFor = millis() - buttonPressStart;
+
+        if (heldFor >= 10000) {
+            Serial.println("GPIO4 held 10 s → Clearing WiFi, entering config mode...");
+            clearWiFi();
+            delay(500);
+            ESP.restart();
+        } else if (heldFor > 300) {
             Serial.println("TOKEN BUTTON");
             generateToken();
         }
     }
+
     lastButtonState = currentButtonState;
 
-    // Call Next
+    // ── GPIO 15 : Call Next (short press) / WiFi config (hold 10 s) ──
     if (digitalRead(nextButton) == LOW) {
-        Serial.println("NEXT PRESSED");
-        callNext();
-        delay(300);
-        while (digitalRead(nextButton) == LOW);
+        unsigned long nextPressStart = millis();
+
+        while (digitalRead(nextButton) == LOW) {
+            if (millis() - nextPressStart >= 10000) {
+                Serial.println("GPIO15 held 10 s → Clearing WiFi, entering config mode...");
+                clearWiFi();
+                delay(500);
+                ESP.restart();
+            }
+        }
+
+        // Released before 10 s → normal Call Next
+        if (millis() - nextPressStart < 10000) {
+            Serial.println("NEXT PRESSED");
+            callNext();
+            delay(300);
+        }
     }
 
     // Call Again
