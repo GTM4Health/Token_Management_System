@@ -47,6 +47,8 @@ color:white;
 
 box-shadow:0 2px 8px rgba(0,0,0,.12);
 
+position:relative;
+
 }
 
 .logo{
@@ -55,6 +57,15 @@ height:48px;
 width:auto;
 margin-right:30px;
 
+}
+
+.demo-logo{
+height:60px;
+width:auto;
+position:absolute;
+left:50%;
+transform:translateX(-50%);
+pointer-events:none;
 }
 
 .header-title{
@@ -357,6 +368,29 @@ font-size:13px;
 
 }
 
+@media(max-width:768px){
+    .header-title{ font-size:16px; letter-spacing:.5px; }
+    .logo{ height:36px; margin-right:15px; }
+    .demo-logo{ height:44px; }
+    .management-content{ padding:20px; }
+    .card{ padding:30px 20px; }
+    .current-number{ font-size:90px; margin-top:15px; }
+    .manual-call{ flex-direction:column; gap:10px; }
+    .manual-call input{ width:100%; }
+    .manual-call button{ width:100%; }
+    .actions button{ width:100%; }
+    .actions{ flex-direction:column; gap:12px; }
+}
+
+@media(max-width:480px){
+    .header{ height:70px; padding:0 4vw; }
+    .logo{ height:28px; margin-right:10px; }
+    .demo-logo{ height:36px; }
+    .header-title{ display:none; }
+    .current-number{ font-size:70px; }
+    .card-label{ font-size:14px; }
+}
+
 </style>
 
 </head>
@@ -365,7 +399,9 @@ font-size:13px;
 
 <div class="header">
 
-<img src="/logo.png" class="logo">
+<img src="/static/logo.jpeg" class="logo">
+
+<img src="/static/demologo.jpeg" class="demo-logo">
 
 <div class="header-title">
 
@@ -807,7 +843,7 @@ loadCurrent();
 
 setInterval(function(){
     loadCurrent();
-}, 5000);
+}, 2000);
 
 </script>
 
