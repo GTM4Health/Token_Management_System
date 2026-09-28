@@ -363,7 +363,7 @@ void loop() {
             clearWiFi();
             delay(500);
             ESP.restart();
-        } else if (heldFor > 300) {
+        } else if (heldFor >= 50) {   // 50 ms debounce — catches normal quick taps
             Serial.println("TOKEN BUTTON");
             generateToken();
         }
