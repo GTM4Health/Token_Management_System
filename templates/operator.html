@@ -21,6 +21,7 @@ box-sizing:border-box;
 
 html,body{
 height:100%;
+overflow:hidden;
 font-family:Arial,"Segoe UI",sans-serif;
 background:#eef6fb;
 color:#12314d;
@@ -53,14 +54,15 @@ position:relative;
 
 .logo{
 
-height:48px;
+height:56px;
 width:auto;
 margin-right:30px;
+object-fit:contain;
 
 }
 
 .demo-logo{
-height:60px;
+height:64px;
 width:auto;
 position:absolute;
 left:50%;
@@ -169,6 +171,8 @@ background:#eef6fb;
 .management-content{
 
 flex:1;
+min-height:0;
+overflow-y:auto;
 
 display:flex;
 flex-direction:column;
@@ -354,18 +358,43 @@ color:white;
 
 .footer{
 
-margin-top:auto;
-
+height:52px;
 background:#0b4f7c;
-
 color:white;
-
 text-align:center;
-
-padding:18px;
-
+display:flex;
+align-items:center;
+justify-content:center;
 font-size:13px;
+flex-shrink:0;
 
+}
+
+/* ---------- Reset Toast ---------- */
+
+.toast{
+    display:none;
+    position:fixed;
+    top:110px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#388e3c;
+    color:white;
+    padding:16px 32px;
+    border-radius:10px;
+    font-size:18px;
+    font-weight:600;
+    box-shadow:0 6px 24px rgba(0,0,0,.25);
+    z-index:9999;
+    white-space:nowrap;
+    animation:fadeInOut 3s ease forwards;
+}
+
+@keyframes fadeInOut{
+    0%  { opacity:0; transform:translateX(-50%) translateY(-10px); }
+    15% { opacity:1; transform:translateX(-50%) translateY(0); }
+    70% { opacity:1; }
+    100%{ opacity:0; }
 }
 
 @media(max-width:768px){
@@ -513,6 +542,8 @@ Reset Queue
 © GTM4Health 2026
 
 </div>
+
+<div id="toast" class="toast">All Tokens have been Reset</div>
 
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -786,6 +817,8 @@ function resetQueue(){
             data
         );
 
+        showToast();
+
     })
 
     .catch(error => {
@@ -796,6 +829,28 @@ function resetQueue(){
         );
 
     });
+
+}
+
+
+/* ==========================================
+   SHOW TOAST NOTIFICATION
+========================================== */
+
+function showToast(){
+
+    const toast = document.getElementById("toast");
+
+    toast.style.display = "block";
+    toast.style.animation = "none";
+
+    void toast.offsetWidth;
+
+    toast.style.animation = "fadeInOut 3s ease forwards";
+
+    setTimeout(function(){
+        toast.style.display = "none";
+    }, 3000);
 
 }
 
