@@ -137,7 +137,7 @@ body{
     justify-content:center;
     align-items:center;
     padding:45px;
-    border:5px solid #1683c4;
+    border:5px solid #0b4f7c;
     box-shadow:0 5px 25px rgba(12,68,105,.08);
 }
 
@@ -346,7 +346,7 @@ body{
                 ---
             </div>
 
-            <div id="proceed-text" class="proceed">
+            <div class="proceed">
                 Please proceed to the room
             </div>
 
@@ -564,23 +564,6 @@ function formatToken(token){
 
 
 /* ==========================================
-   GET CONFIGURABLE PROCEED DESTINATION
-   Set via ESP32 setup page, stored in
-   localStorage as 'proceedText'
-========================================== */
-
-function getProceedText(){
-    return localStorage.getItem("proceedText") || "room";
-}
-
-function applyProceedText(){
-    var dest = getProceedText();
-    document.getElementById("proceed-text").innerHTML =
-        "Please proceed to the " + dest;
-}
-
-
-/* ==========================================
    TEXT-TO-SPEECH
 ========================================== */
 
@@ -588,14 +571,12 @@ function speakToken(token){
 
     window.speechSynthesis.cancel();
 
-    var dest = getProceedText();
-
     let speech =
         new SpeechSynthesisUtterance(
 
             "Token " +
             formatToken(token) +
-            ". Please proceed to the " + dest + "."
+            ". Please proceed to room."
 
         );
 
@@ -710,8 +691,6 @@ function loadWaiting(){
 /* ==========================================
    INITIAL PAGE LOAD
 ========================================== */
-
-applyProceedText();
 
 loadCurrent();
 
