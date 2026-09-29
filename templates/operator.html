@@ -200,9 +200,9 @@ width:min(760px,92vw);
 
 border-radius:14px;
 
-padding:50px;
+padding:60px 50px;
 
-border-top:7px solid #1683c4;
+border:5px solid #0b4f7c;
 
 box-shadow:0 5px 20px rgba(12,68,105,.08);
 
@@ -224,7 +224,7 @@ font-weight:600;
 
 .current-number{
 
-font-size:140px;
+font-size:190px;
 
 font-weight:700;
 
@@ -246,7 +246,7 @@ align-items:center;
 
 gap:12px;
 
-margin-top:35px;
+margin-top:40px;
 
 }
 
@@ -287,72 +287,6 @@ font-size:18px;
 font-weight:600;
 
 cursor:pointer;
-
-}
-
-.actions{
-
-display:flex;
-
-justify-content:center;
-
-align-items:center;
-
-gap:18px;
-
-margin-top:40px;
-
-flex-wrap:wrap;
-
-}
-
-.actions button{
-
-width:190px;
-
-height:55px;
-
-border:none;
-
-border-radius:8px;
-
-font-size:18px;
-
-font-weight:600;
-
-cursor:pointer;
-
-transition:.2s;
-
-}
-
-.actions button:hover{
-
-transform:translateY(-2px);
-
-}
-
-.call-button{
-
-background:#0b4f7c;
-
-color:white;
-
-}
-
-.again-button{
-
-background:#0b4f7c;
-
-color:white;
-
-}
-
-.reset-button{
-
-background:#d32f2f;
-
-color:white;
 
 }
 
@@ -403,12 +337,10 @@ flex-shrink:0;
     .demo-logo{ height:44px; }
     .management-content{ padding:20px; }
     .card{ padding:30px 20px; }
-    .current-number{ font-size:90px; margin-top:15px; }
+    .current-number{ font-size:120px; margin-top:15px; }
     .manual-call{ flex-direction:column; gap:10px; }
     .manual-call input{ width:100%; }
     .manual-call button{ width:100%; }
-    .actions button{ width:100%; }
-    .actions{ flex-direction:column; gap:12px; }
 }
 
 @media(max-width:480px){
@@ -416,7 +348,7 @@ flex-shrink:0;
     .logo{ height:28px; margin-right:10px; }
     .demo-logo{ height:36px; }
     .header-title{ display:none; }
-    .current-number{ font-size:70px; }
+    .current-number{ font-size:90px; }
     .card-label{ font-size:14px; }
 }
 
@@ -505,34 +437,6 @@ Call Token
 
 </div>
 
-
-<div class="actions">
-
-<button
-class="call-button"
-onclick="nextToken()">
-
-Call Next Token
-
-</button>
-
-<button
-class="again-button"
-onclick="callAgain()">
-
-Call Again
-
-</button>
-
-<button
-class="reset-button"
-onclick="resetQueue()">
-
-Reset Queue
-
-</button>
-
-</div>
 
 </div>
 
