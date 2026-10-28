@@ -390,6 +390,8 @@ apps
 
 <a href="/kiosk">Token Dispenser</a>
 
+<a href="/admin">Device Admin</a>
+
 </div>
 
 </div>
@@ -400,6 +402,23 @@ apps
 <div class="management-content">
 
 <div class="cards">
+
+<div class="card" style="margin-bottom:12px;">
+
+<div class="card-label">
+
+OPERATOR COUNTER / ROOM
+
+</div>
+
+<input
+type="text"
+id="operatorCounter"
+value="Counter 1"
+onchange="updateCounter(this.value)"
+style="text-align:center;font-size:16px;font-weight:600;padding:6px 12px;border-radius:6px;border:1px solid #c6d0d8;margin-top:8px;width:80%;max-width:240px;color:#0b4f7c;">
+
+</div>
 
 <div class="card">
 
@@ -530,12 +549,31 @@ socket.on("disconnect", function(){
 
 
 /* ==========================================
+   COUNTER / ROOM IDENTITY
+========================================== */
+
+function getCounter(){
+    return localStorage.getItem("tms_operator_counter") || "Counter 1";
+}
+
+function updateCounter(val){
+    val = (val || "").trim() || "Counter 1";
+    localStorage.setItem("tms_operator_counter", val);
+    const el = document.getElementById("operatorCounter");
+    if (el) el.value = val;
+    loadCurrent();
+}
+
+
+/* ==========================================
    LOAD CURRENT TOKEN
 ========================================== */
 
 function loadCurrent(){
 
-    fetch(`${API_URL}/current`)
+    const counter = getCounter();
+
+    fetch(`${API_URL}/current?counter=${encodeURIComponent(counter)}`)
 
         .then(response => {
 
@@ -579,9 +617,19 @@ function loadCurrent(){
 
 function nextToken(){
 
+    const counter = getCounter();
+
     fetch(`${API_URL}/next`, {
 
-        method:"POST"
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+            counter: counter
+        })
 
     })
 
@@ -611,9 +659,19 @@ function nextToken(){
 
 function callAgain(){
 
+    const counter = getCounter();
+
     fetch(`${API_URL}/call_again`, {
 
-        method:"POST"
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+            counter: counter
+        })
 
     })
 
@@ -652,6 +710,7 @@ function callSpecific(){
 
     }
 
+    const counter = getCounter();
 
     fetch(`${API_URL}/call_specific`, {
 
@@ -662,7 +721,8 @@ function callSpecific(){
         },
 
         body:JSON.stringify({
-            token:token
+            token: token,
+            counter: counter
         })
 
     })
@@ -767,8 +827,12 @@ socket.on("serving_changed", function(data){
 
     if(data && data.token){
 
-        document.getElementById("current").innerHTML =
-            data.token;
+        // Only update current display if it matches this counter, or if no counter specified
+        const counter = getCounter();
+        if(!data.counter || data.counter === counter){
+            document.getElementById("current").innerHTML =
+                data.token;
+        }
 
     }
 
@@ -790,6 +854,10 @@ socket.on("queue_reset", function(){
 /* ==========================================
    INITIAL LOAD
 ========================================== */
+
+const initialCounter = getCounter();
+const counterInput = document.getElementById("operatorCounter");
+if (counterInput) counterInput.value = initialCounter;
 
 loadCurrent();
 

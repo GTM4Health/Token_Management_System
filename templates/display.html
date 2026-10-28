@@ -328,6 +328,8 @@ body{
 
                 <a href="/kiosk">Token Dispenser</a>
 
+                <a href="/admin">Device Admin</a>
+
             </div>
 
         </div>
@@ -346,7 +348,7 @@ body{
                 ---
             </div>
 
-            <div class="proceed">
+            <div id="serving-counter" class="proceed">
                 Please proceed to the room
             </div>
 
@@ -472,6 +474,15 @@ function loadCurrent(){
             document.getElementById("serving").innerHTML =
                 data.token || "---";
 
+            const counterEl = document.getElementById("serving-counter");
+            if (counterEl) {
+                if (data.token && data.token !== "---" && data.counter && data.counter !== "---") {
+                    counterEl.innerHTML = "Please proceed to " + data.counter;
+                } else {
+                    counterEl.innerHTML = "Please proceed to the room";
+                }
+            }
+
         })
 
         .catch(error => {
@@ -483,6 +494,9 @@ function loadCurrent(){
 
             document.getElementById("serving").innerHTML =
                 "---";
+
+            const counterEl = document.getElementById("serving-counter");
+            if (counterEl) counterEl.innerHTML = "Please proceed to the room";
 
         });
 
@@ -500,9 +514,18 @@ socket.on("serving_changed", function(data){
         document.getElementById("serving").innerHTML =
             data.token;
 
+        const counterEl = document.getElementById("serving-counter");
+        if (counterEl) {
+            if (data.counter && data.counter !== "---") {
+                counterEl.innerHTML = "Please proceed to " + data.counter;
+            } else {
+                counterEl.innerHTML = "Please proceed to the room";
+            }
+        }
+
         loadWaiting();
 
-        speakToken(data.token);
+        speakToken(data.token, data.counter);
 
     }
 
@@ -517,6 +540,9 @@ socket.on("queue_reset", function(){
 
     document.getElementById("serving").innerHTML =
         "---";
+
+    const counterEl = document.getElementById("serving-counter");
+    if (counterEl) counterEl.innerHTML = "Please proceed to the room";
 
     document.getElementById("queue-count").innerHTML =
         "0 WAITING";
@@ -564,26 +590,52 @@ function formatToken(token){
 
 
 /* ==========================================
-   TEXT-TO-SPEECH
+   TEXT-TO-SPEECH (FIFO QUEUE)
 ========================================== */
 
-function speakToken(token){
+let speechQueue = [];
+let isSpeaking = false;
 
-    window.speechSynthesis.cancel();
+function processSpeechQueue(){
 
-    let speech =
-        new SpeechSynthesisUtterance(
+    if (isSpeaking || speechQueue.length === 0) return;
 
-            "Token " +
-            formatToken(token) +
-            ". Please proceed to room."
+    if (!('speechSynthesis' in window)) return;
 
-        );
+    isSpeaking = true;
+    let item = speechQueue.shift();
 
-    speech.rate = 0.8;
+    let announcementText =
+        "Token " +
+        formatToken(item.token) +
+        (item.counter ? (". Please proceed to " + item.counter + ".") : ". Please proceed to room.");
+
+    let speech = new SpeechSynthesisUtterance(announcementText);
+    speech.rate = 0.85;
     speech.pitch = 1;
 
+    speech.onend = function(){
+        isSpeaking = false;
+        setTimeout(processSpeechQueue, 250);
+    };
+
+    speech.onerror = function(){
+        isSpeaking = false;
+        setTimeout(processSpeechQueue, 250);
+    };
+
     window.speechSynthesis.speak(speech);
+
+}
+
+function speakToken(token, counter){
+
+    speechQueue.push({
+        token: token,
+        counter: counter
+    });
+
+    processSpeechQueue();
 
 }
 

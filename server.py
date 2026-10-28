@@ -54,15 +54,65 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             token TEXT NOT NULL,
             status TEXT NOT NULL,
+            counter TEXT DEFAULT 'Counter 1',
             generated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS devices(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            device_id TEXT UNIQUE NOT NULL,
+            device_type TEXT NOT NULL DEFAULT 'calling_unit',
+            unit_number INTEGER NOT NULL DEFAULT 1,
+            unit_name TEXT NOT NULL,
+            proceed_text TEXT NOT NULL,
+            last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # Safe migration: ensure counter column exists if table was created previously
+    cursor.execute("PRAGMA table_info(tokens)")
+    columns = [col[1] for col in cursor.fetchall()]
+    if "counter" not in columns:
+        cursor.execute("ALTER TABLE tokens ADD COLUMN counter TEXT DEFAULT 'Counter 1'")
 
     conn.commit()
     conn.close()
 
 
 init_db()
+
+
+def resolve_counter(data):
+    """
+    Resolves counter name and unit name from request payload.
+    Supports either 'device_id' (MAC) or explicit 'counter'.
+    """
+    device_id = (data.get("device_id") or "").strip().upper()
+    explicit_counter = (data.get("counter") or "").strip()
+
+    if device_id:
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT unit_name, proceed_text
+            FROM devices
+            WHERE device_id=?
+        """, (device_id,))
+        row = cursor.fetchone()
+        if row:
+            unit_name, proceed_text = row
+            cursor.execute("UPDATE devices SET last_seen=CURRENT_TIMESTAMP WHERE device_id=?", (device_id,))
+            conn.commit()
+            conn.close()
+            return proceed_text, unit_name
+        conn.close()
+
+    if explicit_counter:
+        return explicit_counter, explicit_counter
+
+    return "Counter 1", "Calling Unit 1"
 
 
 # ==========================
@@ -86,16 +136,27 @@ def display():
 @app.route('/current', methods=['GET'])
 def current_token():
 
+    counter = request.args.get('counter')
+
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT token
-        FROM tokens
-        WHERE status='Serving'
-        ORDER BY id DESC
-        LIMIT 1
-    """)
+    if counter:
+        cursor.execute("""
+            SELECT token, counter
+            FROM tokens
+            WHERE status='Serving' AND counter=?
+            ORDER BY id DESC
+            LIMIT 1
+        """, (counter,))
+    else:
+        cursor.execute("""
+            SELECT token, counter
+            FROM tokens
+            WHERE status='Serving'
+            ORDER BY id DESC
+            LIMIT 1
+        """)
 
     row = cursor.fetchone()
 
@@ -103,12 +164,216 @@ def current_token():
 
     if row is None:
         return jsonify({
-            "token": "---"
+            "token": "---",
+            "counter": counter or "---"
         })
 
     return jsonify({
-        "token": row[0]
+        "token": row[0],
+        "counter": row[1] or "Counter 1"
     })
+
+
+# ==========================
+# ALL SERVING TOKENS
+# ==========================
+
+@app.route('/serving_all', methods=['GET'])
+def serving_all():
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT token, counter
+        FROM tokens
+        WHERE status='Serving'
+        ORDER BY id DESC
+    """)
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return jsonify([
+        {
+            "token": row[0],
+            "counter": row[1] or "Counter 1"
+        }
+        for row in rows
+    ])
+
+
+# ==========================
+# DEVICE REGISTRATION (ESP32 Handshake)
+# ==========================
+
+@app.route('/api/device/register', methods=['POST'])
+def register_device():
+
+    data = request.get_json(silent=True) or {}
+    device_id = (data.get("device_id") or "").strip().upper()
+    device_type = (data.get("device_type") or "calling_unit").strip().lower()
+
+    if not device_id:
+        return jsonify({"error": "device_id is required"}), 400
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT unit_number, unit_name, proceed_text, device_type
+        FROM devices
+        WHERE device_id=?
+    """, (device_id,))
+    row = cursor.fetchone()
+
+    if row:
+        unit_number, unit_name, proceed_text, d_type = row
+        cursor.execute("UPDATE devices SET last_seen=CURRENT_TIMESTAMP WHERE device_id=?", (device_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({
+            "device_id": device_id,
+            "unit_number": unit_number,
+            "unit_name": unit_name,
+            "proceed_text": proceed_text,
+            "device_type": d_type,
+            "is_new": False
+        })
+
+    # Auto-assign next sequential number for this device type
+    cursor.execute("SELECT COUNT(*) FROM devices WHERE device_type=?", (device_type,))
+    count = cursor.fetchone()[0]
+    unit_number = count + 1
+
+    if device_type == "calling_unit":
+        unit_name = f"Calling Unit {unit_number}"
+        proceed_text = f"Room {unit_number}"
+    else:
+        unit_name = f"Dispenser {unit_number}"
+        proceed_text = f"Entrance {unit_number}"
+
+    cursor.execute("""
+        INSERT INTO devices (device_id, device_type, unit_number, unit_name, proceed_text)
+        VALUES (?, ?, ?, ?, ?)
+    """, (device_id, device_type, unit_number, unit_name, proceed_text))
+
+    conn.commit()
+    conn.close()
+
+    socketio.emit("devices_updated")
+
+    return jsonify({
+        "device_id": device_id,
+        "unit_number": unit_number,
+        "unit_name": unit_name,
+        "proceed_text": proceed_text,
+        "device_type": device_type,
+        "is_new": True
+    })
+
+
+# ==========================
+# DEVICE MANAGEMENT APIS
+# ==========================
+
+@app.route('/api/devices', methods=['GET'])
+def list_devices():
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, device_id, device_type, unit_number, unit_name, proceed_text, last_seen
+        FROM devices
+        ORDER BY device_type ASC, unit_number ASC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+
+    devices = [
+        {
+            "id": r[0],
+            "device_id": r[1],
+            "device_type": r[2],
+            "unit_number": r[3],
+            "unit_name": r[4],
+            "proceed_text": r[5],
+            "last_seen": r[6]
+        }
+        for r in rows
+    ]
+    return jsonify(devices)
+
+
+@app.route('/api/device/update', methods=['POST'])
+def update_device():
+
+    data = request.get_json(silent=True) or {}
+    device_id = (data.get("device_id") or "").strip().upper()
+    unit_name = (data.get("unit_name") or "").strip()
+    proceed_text = (data.get("proceed_text") or "").strip()
+
+    if not device_id:
+        return jsonify({"error": "device_id is required"}), 400
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM devices WHERE device_id=?", (device_id,))
+    if not cursor.fetchone():
+        conn.close()
+        return jsonify({"error": "Device not found"}), 404
+
+    cursor.execute("""
+        UPDATE devices
+        SET unit_name=COALESCE(NULLIF(?, ''), unit_name),
+            proceed_text=COALESCE(NULLIF(?, ''), proceed_text)
+        WHERE device_id=?
+    """, (unit_name, proceed_text, device_id))
+
+    conn.commit()
+    conn.close()
+
+    socketio.emit("devices_updated")
+
+    return jsonify({
+        "message": "Device updated successfully",
+        "device_id": device_id,
+        "unit_name": unit_name,
+        "proceed_text": proceed_text
+    })
+
+
+@app.route('/api/device/delete', methods=['POST'])
+def delete_device():
+
+    data = request.get_json(silent=True) or {}
+    device_id = (data.get("device_id") or "").strip().upper()
+
+    if not device_id:
+        return jsonify({"error": "device_id is required"}), 400
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM devices WHERE device_id=?", (device_id,))
+    conn.commit()
+    conn.close()
+
+    socketio.emit("devices_updated")
+
+    return jsonify({
+        "message": "Device deleted successfully",
+        "device_id": device_id
+    })
+
+
+# ==========================
+# ADMIN PAGE
+# ==========================
+
+@app.route('/admin')
+def admin_page():
+    return render_template("admin.html")
 
 
 # ==========================
@@ -231,15 +496,18 @@ def generate_token():
 @app.route('/next', methods=['POST'])
 def next_token():
 
+    data = request.get_json(silent=True) or {}
+    counter, unit_name = resolve_counter(data)
+
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # Complete current serving token
+    # Complete current serving token ONLY for THIS counter
     cursor.execute("""
         UPDATE tokens
         SET status='Completed'
-        WHERE status='Serving'
-    """)
+        WHERE status='Serving' AND counter=?
+    """, (counter,))
 
     # Find oldest waiting token
     cursor.execute("""
@@ -259,18 +527,20 @@ def next_token():
 
         return jsonify({
             "message": "No waiting tokens",
-            "serving": "---"
+            "serving": "---",
+            "counter": counter,
+            "unit_name": unit_name
         })
 
     token_id = row[0]
     token = row[1]
 
-    # Make token serving
+    # Make token serving for THIS counter
     cursor.execute("""
         UPDATE tokens
-        SET status='Serving'
+        SET status='Serving', counter=?
         WHERE id=?
-    """, (token_id,))
+    """, (counter, token_id))
 
     conn.commit()
     conn.close()
@@ -279,12 +549,17 @@ def next_token():
     socketio.emit(
         "serving_changed",
         {
-            "token": token
+            "token": token,
+            "counter": counter,
+            "unit_name": unit_name
         }
     )
 
     return jsonify({
-        "serving": token
+        "serving": token,
+        "token": token,
+        "counter": counter,
+        "unit_name": unit_name
     })
 
 
@@ -295,18 +570,33 @@ def next_token():
 @app.route('/call_again', methods=['POST'])
 def call_again():
 
+    data = request.get_json(silent=True) or {}
+    counter, unit_name = resolve_counter(data)
+
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
+    # First look for active serving token for this counter
     cursor.execute("""
         SELECT token
         FROM tokens
-        WHERE status='Serving'
+        WHERE status='Serving' AND counter=?
         ORDER BY id DESC
         LIMIT 1
-    """)
+    """, (counter,))
 
     row = cursor.fetchone()
+
+    # If no token is currently serving for this counter, check the last token called by this counter
+    if row is None:
+        cursor.execute("""
+            SELECT token
+            FROM tokens
+            WHERE counter=?
+            ORDER BY id DESC
+            LIMIT 1
+        """, (counter,))
+        row = cursor.fetchone()
 
     conn.close()
 
@@ -314,7 +604,10 @@ def call_again():
 
         return jsonify({
             "message": "No token serving",
-            "token": "---"
+            "token": "---",
+            "serving": "---",
+            "counter": counter,
+            "unit_name": unit_name
         })
 
     token = row[0]
@@ -323,12 +616,17 @@ def call_again():
     socketio.emit(
         "serving_changed",
         {
-            "token": token
+            "token": token,
+            "counter": counter,
+            "unit_name": unit_name
         }
     )
 
     return jsonify({
-        "token": token
+        "token": token,
+        "serving": token,
+        "counter": counter,
+        "unit_name": unit_name
     })
 
 
@@ -348,6 +646,7 @@ def call_specific():
         }), 400
 
     token = str(data["token"]).strip().zfill(3)
+    counter, unit_name = resolve_counter(data)
 
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -372,19 +671,19 @@ def call_specific():
 
     token_id = row[0]
 
-    # Complete current serving token
+    # Complete current serving token ONLY for THIS counter
     cursor.execute("""
         UPDATE tokens
         SET status='Completed'
-        WHERE status='Serving'
-    """)
+        WHERE status='Serving' AND counter=?
+    """, (counter,))
 
-    # Make requested token serving
+    # Make requested token serving for THIS counter
     cursor.execute("""
         UPDATE tokens
-        SET status='Serving'
+        SET status='Serving', counter=?
         WHERE id=?
-    """, (token_id,))
+    """, (counter, token_id))
 
     conn.commit()
     conn.close()
@@ -393,13 +692,18 @@ def call_specific():
     socketio.emit(
         "serving_changed",
         {
-            "token": token
+            "token": token,
+            "counter": counter,
+            "unit_name": unit_name
         }
     )
 
     return jsonify({
         "message": "Called",
-        "token": token
+        "token": token,
+        "serving": token,
+        "counter": counter,
+        "unit_name": unit_name
     })
 
 
