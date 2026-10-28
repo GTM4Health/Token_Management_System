@@ -321,13 +321,40 @@ tr:hover {
     background: #d8eaf5;
 }
 
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.status-online {
+    background: #e6f9ed;
+    color: #1e824c;
+}
+
+.status-offline {
+    background: #f1f3f5;
+    color: #718096;
+}
+
 .status-dot {
-    height: 9px;
-    width: 9px;
+    height: 8px;
+    width: 8px;
     border-radius: 50%;
     display: inline-block;
+}
+
+.dot-online {
     background: #27ae60;
-    margin-right: 6px;
+    box-shadow: 0 0 6px rgba(39, 174, 96, 0.7);
+}
+
+.dot-offline {
+    background: #a0aec0;
 }
 
 .empty-state {
@@ -482,7 +509,7 @@ tr:hover {
                         <th style="width: 170px;">Device MAC</th>
                         <th style="width: 220px;">Unit Name</th>
                         <th>"Please proceed to..." Destination</th>
-                        <th style="width: 140px;">Last Seen</th>
+                        <th style="width: 130px;">Status</th>
                         <th style="width: 180px;">Actions</th>
                     </tr>
                 </thead>
@@ -520,7 +547,7 @@ tr:hover {
                         <th style="width: 170px;">Device MAC</th>
                         <th>Dispenser Name</th>
                         <th>Location / Gate</th>
-                        <th style="width: 140px;">Last Seen</th>
+                        <th style="width: 130px;">Status</th>
                         <th style="width: 180px;">Actions</th>
                     </tr>
                 </thead>
@@ -646,7 +673,7 @@ function renderDevices(devices, force = false){
                     </div>
                 </td>
                 <td>
-                    <span class="status-dot"></span>${d.last_seen ? d.last_seen.slice(11, 16) : 'Online'}
+                    ${d.status === 'Online' ? '<span class="status-badge status-online"><span class="status-dot dot-online"></span>Online</span>' : '<span class="status-badge status-offline"><span class="status-dot dot-offline"></span>Offline</span>'}
                 </td>
                 <td>
                     <button class="btn btn-primary" onclick="saveDevice('${d.device_id}', this)">
@@ -683,7 +710,7 @@ function renderDevices(devices, force = false){
                     <input type="text" class="input-editable" id="proceed-${safeId}" value="${d.proceed_text || ''}" oninput="this.dataset.dirty='true'" onkeydown="if(event.key==='Enter')saveDevice('${d.device_id}')">
                 </td>
                 <td>
-                    <span class="status-dot"></span>${d.last_seen ? d.last_seen.slice(11, 16) : 'Online'}
+                    ${d.status === 'Online' ? '<span class="status-badge status-online"><span class="status-dot dot-online"></span>Online</span>' : '<span class="status-badge status-offline"><span class="status-dot dot-offline"></span>Offline</span>'}
                 </td>
                 <td>
                     <button class="btn btn-primary" onclick="saveDevice('${d.device_id}', this)">

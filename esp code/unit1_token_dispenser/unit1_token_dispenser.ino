@@ -36,6 +36,7 @@ bool apMode = false;
 const int buttonPin = 4;
 bool lastButtonState = HIGH;
 unsigned long buttonPressStart = 0;
+unsigned long lastPingTime = 0;
 
 // ── Helper: Read Unique Hardware MAC ──────────────────────────
 String getDeviceMAC() {
@@ -329,6 +330,16 @@ void loop() {
         dnsServer.processNextRequest();
         webServer.handleClient();
         return;
+    }
+
+    // ── Background heartbeat ping every 30 s to maintain "Online" status ──
+    if (WiFi.status() == WL_CONNECTED && millis() - lastPingTime >= 30000) {
+        lastPingTime = millis();
+        HTTPClient http;
+        http.setTimeout(2500);
+        http.begin(serverURL + "/api/device/ping?device_id=" + getDeviceMAC());
+        http.GET();
+        http.end();
     }
 
     // ── GPIO 4 Button Handling ─────────────────────────────────

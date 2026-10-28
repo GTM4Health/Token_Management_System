@@ -314,31 +314,60 @@ def register_device():
 # DEVICE MANAGEMENT APIS
 # ==========================
 
+# ==========================
+# DEVICE HEARTBEAT PING
+# ==========================
+
+@app.route('/api/device/ping', methods=['GET', 'POST'])
+def ping_device():
+
+    data = request.get_json(silent=True) or {}
+    device_id = (request.args.get("device_id") or data.get("device_id") or "").strip().upper()
+
+    if not device_id:
+        return jsonify({"error": "device_id is required"}), 400
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE devices SET last_seen=CURRENT_TIMESTAMP WHERE device_id=?", (device_id,))
+    updated = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+
+    if updated:
+        return jsonify({"status": "ok", "device_id": device_id})
+    return jsonify({"status": "unknown_device", "device_id": device_id}), 404
+
+
 @app.route('/api/devices', methods=['GET'])
 def list_devices():
 
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT id, device_id, device_type, unit_number, unit_name, proceed_text, last_seen
+        SELECT id, device_id, device_type, unit_number, unit_name, proceed_text, last_seen,
+               ROUND((strftime('%s', 'now') - strftime('%s', last_seen))) as seconds_ago
         FROM devices
         ORDER BY device_type ASC, unit_number ASC
     """)
     rows = cursor.fetchall()
     conn.close()
 
-    devices = [
-        {
+    devices = []
+    for r in rows:
+        seconds_ago = r[7] if r[7] is not None else 999999
+        is_online = seconds_ago <= 180  # Online if active in last 3 minutes
+        devices.append({
             "id": r[0],
             "device_id": r[1],
             "device_type": r[2],
             "unit_number": r[3],
             "unit_name": r[4],
             "proceed_text": r[5],
-            "last_seen": r[6]
-        }
-        for r in rows
-    ]
+            "last_seen": r[6],
+            "seconds_ago": seconds_ago,
+            "status": "Online" if is_online else "Offline"
+        })
     return jsonify(devices)
 
 
