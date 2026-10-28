@@ -92,22 +92,23 @@ def resolve_counter(data):
     device_id = (data.get("device_id") or "").strip().upper()
     explicit_counter = (data.get("counter") or "").strip()
 
-    if device_id:
-        conn = sqlite3.connect(DATABASE)
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT unit_name, proceed_text
-            FROM devices
-            WHERE device_id=?
-        """, (device_id,))
-        row = cursor.fetchone()
-        if row:
-            unit_name, proceed_text = row
-            cursor.execute("UPDATE devices SET last_seen=CURRENT_TIMESTAMP WHERE device_id=?", (device_id,))
-            conn.commit()
-            conn.close()
-            return proceed_text, unit_name
+    target_key = device_id or explicit_counter.upper()
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT unit_name, proceed_text
+        FROM devices
+        WHERE device_id=? OR unit_name=?
+    """, (target_key, explicit_counter))
+    row = cursor.fetchone()
+    if row:
+        unit_name, proceed_text = row
+        cursor.execute("UPDATE devices SET last_seen=CURRENT_TIMESTAMP WHERE device_id=? OR unit_name=?", (target_key, explicit_counter))
+        conn.commit()
         conn.close()
+        return proceed_text, unit_name
+    conn.close()
 
     if explicit_counter:
         return explicit_counter, explicit_counter
@@ -467,8 +468,24 @@ def kiosk():
 @app.route('/generate', methods=['POST'])
 def generate_token():
 
+    data = request.get_json(silent=True) or {}
+    device_id = (data.get("device_id") or "").strip().upper()
+
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
+
+    if device_id:
+        cursor.execute("SELECT id FROM devices WHERE device_id=?", (device_id,))
+        if cursor.fetchone():
+            cursor.execute("UPDATE devices SET last_seen=CURRENT_TIMESTAMP WHERE device_id=?", (device_id,))
+        else:
+            cursor.execute("SELECT COUNT(*) FROM devices WHERE device_type='dispenser'")
+            cnt = cursor.fetchone()[0] + 1
+            cursor.execute("""
+                INSERT INTO devices (device_id, device_type, unit_number, unit_name, proceed_text)
+                VALUES (?, 'dispenser', ?, ?, ?)
+            """, (device_id, cnt, f"Dispenser {cnt}", f"Entrance {cnt}"))
+            socketio.emit("devices_updated")
 
     cursor.execute("""
         SELECT token
