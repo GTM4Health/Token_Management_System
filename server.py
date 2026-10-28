@@ -339,6 +339,42 @@ def ping_device():
     return jsonify({"status": "unknown_device", "device_id": device_id}), 404
 
 
+# ==========================
+# RESTORE STATE FROM CLIENT
+# (Survives Render container restarts / sleep)
+# ==========================
+
+@app.route('/api/restore_state', methods=['POST'])
+def restore_state():
+
+    data = request.get_json(silent=True) or {}
+    token = (data.get("token") or "").strip()
+    counter = (data.get("counter") or "").strip()
+
+    if not token or token == "---" or not token.isdigit():
+        return jsonify({"status": "ignored"}), 400
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM tokens")
+    count = cursor.fetchone()[0]
+
+    # Only restore if database is empty or has no serving tokens
+    if count == 0:
+        cursor.execute("""
+            INSERT INTO tokens (token, status, counter)
+            VALUES (?, 'Serving', ?)
+        """, (token, counter or "Room 1"))
+        conn.commit()
+        conn.close()
+        socketio.emit("serving_changed", {"token": token, "counter": counter or "Room 1"})
+        return jsonify({"status": "restored", "token": token})
+
+    conn.close()
+    return jsonify({"status": "skipped", "count": count})
+
+
 @app.route('/api/devices', methods=['GET'])
 def list_devices():
 
@@ -545,11 +581,14 @@ def generate_token():
 
     last = cursor.fetchone()
 
-    if last is None:
-        number = 1
-    else:
-        number = int(last[0]) + 1
+    max_db_number = int(last[0]) if last and str(last[0]).isdigit() else 0
+    client_last_number = 0
+    try:
+        client_last_number = int(data.get("last_token") or 0)
+    except (ValueError, TypeError):
+        client_last_number = 0
 
+    number = max(max_db_number, client_last_number) + 1
     token = f"{number:03d}"
 
     cursor.execute(

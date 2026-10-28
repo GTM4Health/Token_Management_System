@@ -139,10 +139,24 @@ bool loadWiFi() {
     return !(ssid == "" || serverURL == "");
 }
 
+void saveLastToken(int num) {
+    preferences.begin("tms_tok", false);
+    preferences.putInt("last_tok", num);
+    preferences.end();
+}
+
+int loadLastToken() {
+    preferences.begin("tms_tok", true);
+    int num = preferences.getInt("last_tok", 0);
+    preferences.end();
+    return num;
+}
+
 void clearWiFi() {
     preferences.begin("wifi", false);
     preferences.clear();
     preferences.end();
+    saveLastToken(0);
     Serial.println("Saved WiFi Cleared!");
 }
 
@@ -278,7 +292,8 @@ void generateToken() {
     http.begin(url);
     http.addHeader("Content-Type", "application/json");
 
-    String body = "{\"device_id\":\"" + getDeviceMAC() + "\"}";
+    int prevToken = loadLastToken();
+    String body = "{\"device_id\":\"" + getDeviceMAC() + "\",\"last_token\":" + String(prevToken) + "}";
     int code = http.POST(body);
 
     Serial.print("Generate HTTP code: ");
@@ -288,8 +303,13 @@ void generateToken() {
         String payload = http.getString();
         JsonDocument doc;
         if (!deserializeJson(doc, payload)) {
+            const char* tokStr = doc["token"];
+            int issued = atoi(tokStr);
+            if (issued > 0) {
+                saveLastToken(issued);
+            }
             Serial.print(">>> TOKEN ISSUED: ");
-            Serial.println((const char*)doc["token"]);
+            Serial.println(tokStr);
         }
     } else {
         Serial.println("Failed to contact server.");

@@ -488,7 +488,7 @@ function loadCurrent(){
 
             } else {
 
-                // If server has no token, fall back to last saved token from previous session
+                // If server has no token, fall back to last saved token and restore server state
                 const cached = localStorage.getItem("tms_last_serving_token");
                 if(cached && cached !== "---"){
                     document.getElementById("serving").innerHTML = cached;
@@ -497,6 +497,12 @@ function loadCurrent(){
                     if (counterEl && cachedCounter && cachedCounter !== "---") {
                         counterEl.innerHTML = "Please proceed to " + cachedCounter;
                     }
+                    // Restore server state so subsequent tokens continue sequentially even after server restart
+                    fetch(`${API_URL}/api/restore_state`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ token: cached, counter: cachedCounter || "Room 1" })
+                    }).catch(() => {});
                 } else {
                     document.getElementById("serving").innerHTML = "---";
                     const counterEl = document.getElementById("serving-counter");
