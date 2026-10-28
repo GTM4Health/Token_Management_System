@@ -352,11 +352,11 @@ void loop() {
         return;
     }
 
-    // ── Background heartbeat ping every 20 s to maintain "Online" status ──
-    if (WiFi.status() == WL_CONNECTED && millis() - lastPingTime >= 20000) {
+    // ── Background heartbeat ping every 2.5 s to maintain "Online" status ──
+    if (WiFi.status() == WL_CONNECTED && millis() - lastPingTime >= 2500) {
         lastPingTime = millis();
         HTTPClient http;
-        http.setTimeout(2500);
+        http.setTimeout(1200);
         http.begin(serverURL + "/api/device/ping?device_id=" + getDeviceMAC());
         http.GET();
         http.end();

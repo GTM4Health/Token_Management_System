@@ -1,0 +1,4 @@
+(fp_lib_table
+	(version 7)
+	(lib (name "customu1trial") (type "KiCad") (uri "${KIPRJMOD}/customu1trial.pretty") (options "") (descr ""))
+)
