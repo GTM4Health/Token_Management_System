@@ -471,16 +471,38 @@ function loadCurrent(){
 
         .then(data => {
 
-            document.getElementById("serving").innerHTML =
-                data.token || "---";
+            if(data.token && data.token !== "---"){
 
-            const counterEl = document.getElementById("serving-counter");
-            if (counterEl) {
-                if (data.token && data.token !== "---" && data.counter && data.counter !== "---") {
-                    counterEl.innerHTML = "Please proceed to " + data.counter;
-                } else {
-                    counterEl.innerHTML = "Please proceed to the room";
+                document.getElementById("serving").innerHTML = data.token;
+                localStorage.setItem("tms_last_serving_token", data.token);
+
+                const counterEl = document.getElementById("serving-counter");
+                if (counterEl) {
+                    if (data.counter && data.counter !== "---") {
+                        counterEl.innerHTML = "Please proceed to " + data.counter;
+                        localStorage.setItem("tms_last_serving_counter", data.counter);
+                    } else {
+                        counterEl.innerHTML = "Please proceed to the room";
+                    }
                 }
+
+            } else {
+
+                // If server has no token, fall back to last saved token from previous session
+                const cached = localStorage.getItem("tms_last_serving_token");
+                if(cached && cached !== "---"){
+                    document.getElementById("serving").innerHTML = cached;
+                    const cachedCounter = localStorage.getItem("tms_last_serving_counter");
+                    const counterEl = document.getElementById("serving-counter");
+                    if (counterEl && cachedCounter && cachedCounter !== "---") {
+                        counterEl.innerHTML = "Please proceed to " + cachedCounter;
+                    }
+                } else {
+                    document.getElementById("serving").innerHTML = "---";
+                    const counterEl = document.getElementById("serving-counter");
+                    if (counterEl) counterEl.innerHTML = "Please proceed to the room";
+                }
+
             }
 
         })
@@ -492,11 +514,13 @@ function loadCurrent(){
                 error
             );
 
-            document.getElementById("serving").innerHTML =
-                "---";
-
-            const counterEl = document.getElementById("serving-counter");
-            if (counterEl) counterEl.innerHTML = "Please proceed to the room";
+            // Keep showing last known token from localStorage instead of blanking out
+            const cached = localStorage.getItem("tms_last_serving_token");
+            if(cached && cached !== "---"){
+                document.getElementById("serving").innerHTML = cached;
+            } else {
+                document.getElementById("serving").innerHTML = "---";
+            }
 
         });
 
@@ -513,11 +537,13 @@ socket.on("serving_changed", function(data){
 
         document.getElementById("serving").innerHTML =
             data.token;
+        localStorage.setItem("tms_last_serving_token", data.token);
 
         const counterEl = document.getElementById("serving-counter");
         if (counterEl) {
             if (data.counter && data.counter !== "---") {
                 counterEl.innerHTML = "Please proceed to " + data.counter;
+                localStorage.setItem("tms_last_serving_counter", data.counter);
             } else {
                 counterEl.innerHTML = "Please proceed to the room";
             }
@@ -537,6 +563,9 @@ socket.on("serving_changed", function(data){
 ========================================== */
 
 socket.on("queue_reset", function(){
+
+    localStorage.removeItem("tms_last_serving_token");
+    localStorage.removeItem("tms_last_serving_counter");
 
     document.getElementById("serving").innerHTML =
         "---";
@@ -743,6 +772,17 @@ function loadWaiting(){
 /* ==========================================
    INITIAL PAGE LOAD
 ========================================== */
+
+// Restore last served token and destination from previous session immediately:
+const savedServing = localStorage.getItem("tms_last_serving_token");
+const savedCounter = localStorage.getItem("tms_last_serving_counter");
+if (savedServing && savedServing !== "---") {
+    document.getElementById("serving").innerHTML = savedServing;
+    if (savedCounter && savedCounter !== "---") {
+        const counterEl = document.getElementById("serving-counter");
+        if (counterEl) counterEl.innerHTML = "Please proceed to " + savedCounter;
+    }
+}
 
 loadCurrent();
 

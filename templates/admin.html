@@ -348,35 +348,6 @@ tr:hover {
     margin-bottom: 10px;
 }
 
-/* Quick Tools */
-.tools-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-}
-
-.tool-box {
-    border: 1px solid #dde6ed;
-    border-radius: 10px;
-    padding: 18px 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.tool-box h4 {
-    font-size: 15px;
-    color: #0b4f7c;
-    margin-bottom: 6px;
-}
-
-.tool-box p {
-    font-size: 13px;
-    color: #607080;
-    line-height: 1.4;
-    margin-bottom: 14px;
-}
-
 /* Toast */
 .toast {
     position: fixed;
@@ -547,43 +518,6 @@ tr:hover {
                     </tr>
                 </tbody>
             </table>
-        </div>
-    </div>
-
-    <!-- Quick Tools / Global Controls -->
-    <div class="card-section">
-        <div class="section-title" style="margin-bottom: 16px;">
-            <span class="material-symbols-outlined">build</span>
-            System Controls
-        </div>
-        <div class="tools-grid">
-            <div class="tool-box">
-                <div>
-                    <h4>Simulate New Device</h4>
-                    <p>Register a virtual unit to test auto-numbering and custom proceed destinations.</p>
-                </div>
-                <button class="btn btn-primary" onclick="simulateDevice()">
-                    <span class="material-symbols-outlined" style="font-size:18px">add</span> Add Test Calling Unit
-                </button>
-            </div>
-            <div class="tool-box">
-                <div>
-                    <h4>Test Voice Announcement</h4>
-                    <p>Hear how "Token 001, Please proceed to Room 101" sounds in your browser.</p>
-                </div>
-                <button class="btn btn-test" onclick="testAudio()">
-                    <span class="material-symbols-outlined" style="font-size:18px">volume_up</span> Test Audio Chime
-                </button>
-            </div>
-            <div class="tool-box">
-                <div>
-                    <h4>Daily Queue Reset</h4>
-                    <p>Clear all waiting and completed tokens. Resets numbering back to 001.</p>
-                </div>
-                <button class="btn btn-danger" onclick="resetQueue()">
-                    <span class="material-symbols-outlined" style="font-size:18px">restart_alt</span> Reset All Tokens
-                </button>
-            </div>
         </div>
     </div>
 </div>
@@ -765,47 +699,6 @@ function deleteDevice(deviceId){
         showToast("Device unregistered");
         loadDevices();
     });
-}
-
-function simulateDevice(){
-    const randomHex = () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase();
-    const fakeMac = `24:6F:28:${randomHex()}:${randomHex()}:${randomHex()}`;
-
-    fetch("/api/device/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            device_id: fakeMac,
-            device_type: "calling_unit"
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        showToast(`Auto-assigned: ${data.unit_name} ("Please proceed to ${data.proceed_text}")`);
-        loadDevices();
-    });
-}
-
-function testAudio(){
-    if (!('speechSynthesis' in window)){
-        alert("Text-to-speech is not supported in this browser.");
-        return;
-    }
-    const sampleText = "Token Zero, Zero, One. Please proceed to Room 101.";
-    const speech = new SpeechSynthesisUtterance(sampleText);
-    speech.rate = 0.85;
-    window.speechSynthesis.speak(speech);
-    showToast("Playing voice: " + sampleText);
-}
-
-function resetQueue(){
-    if (!confirm("WARNING: Are you sure you want to reset all tokens?")) return;
-    fetch("/reset", { method: "POST" })
-        .then(res => res.json())
-        .then(() => {
-            showToast("All queue tokens have been reset!");
-            loadStats();
-        });
 }
 
 // Live Socket.IO Updates

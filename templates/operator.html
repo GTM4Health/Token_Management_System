@@ -591,8 +591,17 @@ function loadCurrent(){
 
         .then(data => {
 
-            document.getElementById("current").innerHTML =
-                data.token || "---";
+            if(data.token && data.token !== "---"){
+                document.getElementById("current").innerHTML = data.token;
+                localStorage.setItem("tms_operator_current_" + counter, data.token);
+            } else {
+                const cached = localStorage.getItem("tms_operator_current_" + counter);
+                if(cached && cached !== "---"){
+                    document.getElementById("current").innerHTML = cached;
+                } else {
+                    document.getElementById("current").innerHTML = "---";
+                }
+            }
 
         })
 
@@ -603,8 +612,12 @@ function loadCurrent(){
                 error
             );
 
-            document.getElementById("current").innerHTML =
-                "---";
+            const cached = localStorage.getItem("tms_operator_current_" + counter);
+            if(cached && cached !== "---"){
+                document.getElementById("current").innerHTML = cached;
+            } else {
+                document.getElementById("current").innerHTML = "---";
+            }
 
         });
 
@@ -832,6 +845,7 @@ socket.on("serving_changed", function(data){
         if(!data.counter || data.counter === counter){
             document.getElementById("current").innerHTML =
                 data.token;
+            localStorage.setItem("tms_operator_current_" + counter, data.token);
         }
 
     }
@@ -844,6 +858,9 @@ socket.on("serving_changed", function(data){
 ========================================== */
 
 socket.on("queue_reset", function(){
+
+    const counter = getCounter();
+    localStorage.removeItem("tms_operator_current_" + counter);
 
     document.getElementById("current").innerHTML =
         "---";
@@ -858,6 +875,11 @@ socket.on("queue_reset", function(){
 const initialCounter = getCounter();
 const counterInput = document.getElementById("operatorCounter");
 if (counterInput) counterInput.value = initialCounter;
+
+const savedOp = localStorage.getItem("tms_operator_current_" + initialCounter);
+if (savedOp && savedOp !== "---") {
+    document.getElementById("current").innerHTML = savedOp;
+}
 
 loadCurrent();
 

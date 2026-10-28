@@ -160,6 +160,27 @@ def current_token():
 
     row = cursor.fetchone()
 
+    # If no token is currently Serving, fall back to the most recent token served/completed
+    # so the display preserves whatever token was last called (without jumping to waiting tokens)
+    if row is None:
+        if counter:
+            cursor.execute("""
+                SELECT token, counter
+                FROM tokens
+                WHERE status IN ('Serving', 'Completed') AND counter=?
+                ORDER BY id DESC
+                LIMIT 1
+            """, (counter,))
+        else:
+            cursor.execute("""
+                SELECT token, counter
+                FROM tokens
+                WHERE status IN ('Serving', 'Completed')
+                ORDER BY id DESC
+                LIMIT 1
+            """)
+        row = cursor.fetchone()
+
     conn.close()
 
     if row is None:
