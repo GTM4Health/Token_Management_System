@@ -587,19 +587,30 @@ function loadStats(){
         }).catch(() => {});
 }
 
-function loadDevices(){
+function loadDevices(force = false){
     fetch(`${API_URL}/api/devices`)
         .then(res => res.json())
         .then(devices => {
-            renderDevices(devices);
+            renderDevices(devices, force);
         })
         .catch(err => {
             console.error("Failed to load devices:", err);
         });
 }
 
-function renderDevices(devices){
+function renderDevices(devices, force = false){
     if (!Array.isArray(devices)) devices = [];
+
+    // Check if user is actively typing in any input field or has unsaved edits
+    const active = document.activeElement;
+    const isTyping = active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA");
+    const dirtyInputs = document.querySelectorAll("input[data-dirty='true']");
+
+    if (!force && (isTyping || dirtyInputs.length > 0)) {
+        // User is editing; do NOT wipe out input fields or reset cursor
+        return;
+    }
+
     const callingBody = document.getElementById("calling-units-table");
     const dispenserBody = document.getElementById("dispensers-table");
 
@@ -626,19 +637,19 @@ function renderDevices(devices){
                 <td><span class="badge badge-unit">#${d.unit_number}</span></td>
                 <td><span class="mac-code">${d.device_id}</span></td>
                 <td>
-                    <input type="text" class="input-editable" id="name-${safeId}" value="${d.unit_name || ''}">
+                    <input type="text" class="input-editable" id="name-${safeId}" value="${d.unit_name || ''}" oninput="this.dataset.dirty='true'" onkeydown="if(event.key==='Enter')saveDevice('${d.device_id}')">
                 </td>
                 <td>
                     <div class="proceed-input-wrap">
                         <span class="proceed-prefix">Please proceed to</span>
-                        <input type="text" class="input-editable" id="proceed-${safeId}" value="${d.proceed_text || ''}">
+                        <input type="text" class="input-editable" id="proceed-${safeId}" value="${d.proceed_text || ''}" oninput="this.dataset.dirty='true'" onkeydown="if(event.key==='Enter')saveDevice('${d.device_id}')">
                     </div>
                 </td>
                 <td>
                     <span class="status-dot"></span>${d.last_seen ? d.last_seen.slice(11, 16) : 'Online'}
                 </td>
                 <td>
-                    <button class="btn btn-primary" onclick="saveDevice('${d.device_id}')">
+                    <button class="btn btn-primary" onclick="saveDevice('${d.device_id}', this)">
                         <span class="material-symbols-outlined" style="font-size:16px;">save</span> Save
                     </button>
                     <button class="btn btn-danger" onclick="deleteDevice('${d.device_id}')" title="Unpair Device">
@@ -666,16 +677,16 @@ function renderDevices(devices){
                 <td><span class="badge badge-unit">#${d.unit_number}</span></td>
                 <td><span class="mac-code">${d.device_id}</span></td>
                 <td>
-                    <input type="text" class="input-editable" id="name-${safeId}" value="${d.unit_name || ''}">
+                    <input type="text" class="input-editable" id="name-${safeId}" value="${d.unit_name || ''}" oninput="this.dataset.dirty='true'" onkeydown="if(event.key==='Enter')saveDevice('${d.device_id}')">
                 </td>
                 <td>
-                    <input type="text" class="input-editable" id="proceed-${safeId}" value="${d.proceed_text || ''}">
+                    <input type="text" class="input-editable" id="proceed-${safeId}" value="${d.proceed_text || ''}" oninput="this.dataset.dirty='true'" onkeydown="if(event.key==='Enter')saveDevice('${d.device_id}')">
                 </td>
                 <td>
                     <span class="status-dot"></span>${d.last_seen ? d.last_seen.slice(11, 16) : 'Online'}
                 </td>
                 <td>
-                    <button class="btn btn-primary" onclick="saveDevice('${d.device_id}')">
+                    <button class="btn btn-primary" onclick="saveDevice('${d.device_id}', this)">
                         <span class="material-symbols-outlined" style="font-size:16px;">save</span> Save
                     </button>
                     <button class="btn btn-danger" onclick="deleteDevice('${d.device_id}')">
@@ -687,12 +698,17 @@ function renderDevices(devices){
     }
 }
 
-function saveDevice(deviceId){
+function saveDevice(deviceId, btn){
     const safeId = deviceId.replace(/[^a-zA-Z0-9_-]/g, '_');
     const nameEl = document.getElementById("name-" + safeId) || document.getElementById("name-" + deviceId);
     const procEl = document.getElementById("proceed-" + safeId) || document.getElementById("proceed-" + deviceId);
     const unitName = nameEl ? nameEl.value.trim() : "";
     const proceedText = procEl ? procEl.value.trim() : "";
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px;">hourglass_top</span> Saving...`;
+    }
 
     fetch(`${API_URL}/api/device/update`, {
         method: "POST",
@@ -705,11 +721,20 @@ function saveDevice(deviceId){
     })
     .then(res => res.json())
     .then(data => {
+        if (nameEl) nameEl.dataset.dirty = "false";
+        if (procEl) procEl.dataset.dirty = "false";
         showToast(`Updated: ${unitName} -> "Please proceed to ${proceedText}"`);
-        loadDevices();
+        loadDevices(true);
     })
     .catch(err => {
         console.error("Failed to update device:", err);
+        showToast("Error updating device");
+    })
+    .finally(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px;">save</span> Save`;
+        }
     });
 }
 
