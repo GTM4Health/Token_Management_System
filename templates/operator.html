@@ -573,50 +573,20 @@ function loadCurrent(){
 
     fetch(`${API_URL}/current?counter=${encodeURIComponent(counter)}`)
 
-        .then(response => {
-
-            if(!response.ok){
-
-                throw new Error(
-                    "Failed to load current token"
-                );
-
-            }
-
-            return response.json();
-
-        })
+        .then(response => response.json())
 
         .then(data => {
 
             if(data.token && data.token !== "---"){
                 document.getElementById("current").innerHTML = data.token;
-                localStorage.setItem("tms_operator_current_" + counter, data.token);
             } else {
-                const cached = localStorage.getItem("tms_operator_current_" + counter);
-                if(cached && cached !== "---"){
-                    document.getElementById("current").innerHTML = cached;
-                } else {
-                    document.getElementById("current").innerHTML = "---";
-                }
+                document.getElementById("current").innerHTML = "---";
             }
 
         })
 
         .catch(error => {
-
-            console.error(
-                "Current token error:",
-                error
-            );
-
-            const cached = localStorage.getItem("tms_operator_current_" + counter);
-            if(cached && cached !== "---"){
-                document.getElementById("current").innerHTML = cached;
-            } else {
-                document.getElementById("current").innerHTML = "---";
-            }
-
+            console.error("Current token error:", error);
         });
 
 }
@@ -631,34 +601,25 @@ function nextToken(){
     const counter = getCounter();
 
     fetch(`${API_URL}/next`, {
-
         method:"POST",
-
-        headers:{
-            "Content-Type":"application/json"
-        },
-
-        body:JSON.stringify({
-            counter: counter
-        })
-
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({ counter: counter })
     })
 
     .then(response => response.json())
 
     .then(data => {
-
-        console.log("Next token:", data);
-
+        console.log("Next token response:", data);
+        if(data.token && data.token !== "---"){
+            document.getElementById("current").innerHTML = data.token;
+        }
+        if(data.message === "No waiting tokens"){
+            showToast("No waiting tokens in queue");
+        }
     })
 
     .catch(error => {
-
-        console.error(
-            "Next token error:",
-            error
-        );
-
+        console.error("Next token error:", error);
     });
 
 }
@@ -673,34 +634,25 @@ function callAgain(){
     const counter = getCounter();
 
     fetch(`${API_URL}/call_again`, {
-
         method:"POST",
-
-        headers:{
-            "Content-Type":"application/json"
-        },
-
-        body:JSON.stringify({
-            counter: counter
-        })
-
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({ counter: counter })
     })
 
     .then(response => response.json())
 
     .then(data => {
-
-        console.log("Call again:", data);
-
+        console.log("Call again response:", data);
+        if(data.token && data.token !== "---"){
+            document.getElementById("current").innerHTML = data.token;
+            showToast("Calling token " + data.token + " again");
+        } else {
+            showToast("No token to call");
+        }
     })
 
     .catch(error => {
-
-        console.error(
-            "Call again error:",
-            error
-        );
-
+        console.error("Call again error:", error);
     });
 
 }

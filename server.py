@@ -339,40 +339,7 @@ def ping_device():
     return jsonify({"status": "unknown_device", "device_id": device_id}), 404
 
 
-# ==========================
-# RESTORE STATE FROM CLIENT
-# (Survives Render container restarts / sleep)
-# ==========================
 
-@app.route('/api/restore_state', methods=['POST'])
-def restore_state():
-
-    data = request.get_json(silent=True) or {}
-    token = (data.get("token") or "").strip()
-    counter = (data.get("counter") or "").strip()
-
-    if not token or token == "---" or not token.isdigit():
-        return jsonify({"status": "ignored"}), 400
-
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT COUNT(*) FROM tokens")
-    count = cursor.fetchone()[0]
-
-    # Only restore if database is empty or has no serving tokens
-    if count == 0:
-        cursor.execute("""
-            INSERT INTO tokens (token, status, counter)
-            VALUES (?, 'Serving', ?)
-        """, (token, counter or "Room 1"))
-        conn.commit()
-        conn.close()
-        socketio.emit("serving_changed", {"token": token, "counter": counter or "Room 1"})
-        return jsonify({"status": "restored", "token": token})
-
-    conn.close()
-    return jsonify({"status": "skipped", "count": count})
 
 
 @app.route('/api/devices', methods=['GET'])
@@ -629,14 +596,7 @@ def next_token():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # Complete current serving token ONLY for THIS counter
-    cursor.execute("""
-        UPDATE tokens
-        SET status='Completed'
-        WHERE status='Serving' AND counter=?
-    """, (counter,))
-
-    # Find oldest waiting token
+    # 1. Find oldest waiting token FIRST
     cursor.execute("""
         SELECT id, token
         FROM tokens
@@ -647,14 +607,34 @@ def next_token():
 
     row = cursor.fetchone()
 
+    # If NO waiting tokens in queue:
     if row is None:
+        # Keep the currently serving token active! DO NOT mark anything completed!
+        cursor.execute("""
+            SELECT token
+            FROM tokens
+            WHERE status='Serving' AND counter=?
+            ORDER BY id DESC
+            LIMIT 1
+        """, (counter,))
+        curr = cursor.fetchone()
+        if curr is None:
+            cursor.execute("""
+                SELECT token
+                FROM tokens
+                WHERE counter=?
+                ORDER BY id DESC
+                LIMIT 1
+            """, (counter,))
+            curr = cursor.fetchone()
 
-        conn.commit()
+        current_token = curr[0] if curr else "---"
         conn.close()
 
         return jsonify({
             "message": "No waiting tokens",
-            "serving": "---",
+            "serving": current_token,
+            "token": current_token,
             "counter": counter,
             "unit_name": unit_name
         })
@@ -662,7 +642,15 @@ def next_token():
     token_id = row[0]
     token = row[1]
 
-    # Make token serving for THIS counter
+    # ONLY when an actual new token exists:
+    # 2. Mark previous serving token for this counter as Completed
+    cursor.execute("""
+        UPDATE tokens
+        SET status='Completed'
+        WHERE status='Serving' AND counter=?
+    """, (counter,))
+
+    # 3. Mark the new waiting token as Serving for this counter
     cursor.execute("""
         UPDATE tokens
         SET status='Serving', counter=?
@@ -672,7 +660,7 @@ def next_token():
     conn.commit()
     conn.close()
 
-    # Notify connected clients
+    # 4. Notify connected clients
     socketio.emit(
         "serving_changed",
         {
@@ -703,21 +691,20 @@ def call_again():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # First look for active serving token for this counter
+    # 1. Look for active Serving token for this counter
     cursor.execute("""
-        SELECT token
+        SELECT token, counter
         FROM tokens
         WHERE status='Serving' AND counter=?
         ORDER BY id DESC
         LIMIT 1
     """, (counter,))
-
     row = cursor.fetchone()
 
-    # If no token is currently serving for this counter, check the last token called by this counter
+    # 2. If none serving for this counter, look for last token called by this counter (even if Completed)
     if row is None:
         cursor.execute("""
-            SELECT token
+            SELECT token, counter
             FROM tokens
             WHERE counter=?
             ORDER BY id DESC
@@ -725,10 +712,40 @@ def call_again():
         """, (counter,))
         row = cursor.fetchone()
 
-    conn.close()
+    # 3. Fall back to ANY active serving token across any counter
+    if row is None:
+        cursor.execute("""
+            SELECT token, counter
+            FROM tokens
+            WHERE status='Serving'
+            ORDER BY id DESC
+            LIMIT 1
+        """)
+        row = cursor.fetchone()
+
+    # 4. Fall back to most recent token called across any counter
+    if row is None:
+        cursor.execute("""
+            SELECT token, counter
+            FROM tokens
+            WHERE status IN ('Serving', 'Completed')
+            ORDER BY id DESC
+            LIMIT 1
+        """)
+        row = cursor.fetchone()
+
+    # 5. Last fallback: most recent token in tokens table
+    if row is None:
+        cursor.execute("""
+            SELECT token, counter
+            FROM tokens
+            ORDER BY id DESC
+            LIMIT 1
+        """)
+        row = cursor.fetchone()
 
     if row is None:
-
+        conn.close()
         return jsonify({
             "message": "No token serving",
             "token": "---",
@@ -738,6 +755,16 @@ def call_again():
         })
 
     token = row[0]
+    token_counter = row[1] if row[1] else counter
+
+    # Ensure this token is in Serving status
+    cursor.execute("""
+        UPDATE tokens
+        SET status='Serving', counter=?
+        WHERE token=?
+    """, (token_counter, token))
+    conn.commit()
+    conn.close()
 
     # Notify connected clients
     socketio.emit(

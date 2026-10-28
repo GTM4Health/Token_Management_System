@@ -488,26 +488,11 @@ function loadCurrent(){
 
             } else {
 
-                // If server has no token, fall back to last saved token and restore server state
-                const cached = localStorage.getItem("tms_last_serving_token");
-                if(cached && cached !== "---"){
-                    document.getElementById("serving").innerHTML = cached;
-                    const cachedCounter = localStorage.getItem("tms_last_serving_counter");
-                    const counterEl = document.getElementById("serving-counter");
-                    if (counterEl && cachedCounter && cachedCounter !== "---") {
-                        counterEl.innerHTML = "Please proceed to " + cachedCounter;
-                    }
-                    // Restore server state so subsequent tokens continue sequentially even after server restart
-                    fetch(`${API_URL}/api/restore_state`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ token: cached, counter: cachedCounter || "Room 1" })
-                    }).catch(() => {});
-                } else {
-                    document.getElementById("serving").innerHTML = "---";
-                    const counterEl = document.getElementById("serving-counter");
-                    if (counterEl) counterEl.innerHTML = "Please proceed to the room";
-                }
+                document.getElementById("serving").innerHTML = "---";
+                const counterEl = document.getElementById("serving-counter");
+                if (counterEl) counterEl.innerHTML = "Please proceed to the room";
+                localStorage.removeItem("tms_last_serving_token");
+                localStorage.removeItem("tms_last_serving_counter");
 
             }
 
@@ -519,14 +504,6 @@ function loadCurrent(){
                 "Current token error:",
                 error
             );
-
-            // Keep showing last known token from localStorage instead of blanking out
-            const cached = localStorage.getItem("tms_last_serving_token");
-            if(cached && cached !== "---"){
-                document.getElementById("serving").innerHTML = cached;
-            } else {
-                document.getElementById("serving").innerHTML = "---";
-            }
 
         });
 
