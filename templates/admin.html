@@ -538,7 +538,7 @@ tr:hover {
 </div>
 
 <div class="footer">
-    Powered by GTM4Health Token Management System
+    © GTM4Health 2026
 </div>
 
 <div id="toast" class="toast">
@@ -548,7 +548,11 @@ tr:hover {
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
-const socket = io();
+/* ==========================================
+   RENDER BACKEND
+========================================== */
+const API_URL = "https://token-management-system-cvo8.onrender.com";
+const socket = io(API_URL);
 
 function toggleMenu(event){
     event.stopPropagation();
@@ -570,13 +574,13 @@ function showToast(msg){
 }
 
 function loadStats(){
-    fetch("/serving_all")
+    fetch(`${API_URL}/serving_all`)
         .then(res => res.json())
         .then(data => {
             document.getElementById("count-serving").innerText = data.length || 0;
         }).catch(() => {});
 
-    fetch("/waiting")
+    fetch(`${API_URL}/waiting`)
         .then(res => res.json())
         .then(data => {
             document.getElementById("count-waiting").innerText = data.length || 0;
@@ -584,7 +588,7 @@ function loadStats(){
 }
 
 function loadDevices(){
-    fetch("/api/devices")
+    fetch(`${API_URL}/api/devices`)
         .then(res => res.json())
         .then(devices => {
             renderDevices(devices);
@@ -595,6 +599,7 @@ function loadDevices(){
 }
 
 function renderDevices(devices){
+    if (!Array.isArray(devices)) devices = [];
     const callingBody = document.getElementById("calling-units-table");
     const dispenserBody = document.getElementById("dispensers-table");
 
@@ -614,17 +619,19 @@ function renderDevices(devices){
                 </td>
             </tr>`;
     } else {
-        callingBody.innerHTML = callingUnits.map(d => `
-            <tr id="row-${d.device_id.replace(/:/g, '')}">
+        callingBody.innerHTML = callingUnits.map(d => {
+            const safeId = d.device_id.replace(/[^a-zA-Z0-9_-]/g, '_');
+            return `
+            <tr id="row-${safeId}">
                 <td><span class="badge badge-unit">#${d.unit_number}</span></td>
                 <td><span class="mac-code">${d.device_id}</span></td>
                 <td>
-                    <input type="text" class="input-editable" id="name-${d.device_id}" value="${d.unit_name}">
+                    <input type="text" class="input-editable" id="name-${safeId}" value="${d.unit_name || ''}">
                 </td>
                 <td>
                     <div class="proceed-input-wrap">
                         <span class="proceed-prefix">Please proceed to</span>
-                        <input type="text" class="input-editable" id="proceed-${d.device_id}" value="${d.proceed_text}">
+                        <input type="text" class="input-editable" id="proceed-${safeId}" value="${d.proceed_text || ''}">
                     </div>
                 </td>
                 <td>
@@ -638,8 +645,8 @@ function renderDevices(devices){
                         <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
                     </button>
                 </td>
-            </tr>
-        `).join("");
+            </tr>`;
+        }).join("");
     }
 
     // Render Dispensers
@@ -652,15 +659,17 @@ function renderDevices(devices){
                 </td>
             </tr>`;
     } else {
-        dispenserBody.innerHTML = dispensers.map(d => `
-            <tr>
+        dispenserBody.innerHTML = dispensers.map(d => {
+            const safeId = d.device_id.replace(/[^a-zA-Z0-9_-]/g, '_');
+            return `
+            <tr id="row-${safeId}">
                 <td><span class="badge badge-unit">#${d.unit_number}</span></td>
                 <td><span class="mac-code">${d.device_id}</span></td>
                 <td>
-                    <input type="text" class="input-editable" id="name-${d.device_id}" value="${d.unit_name}">
+                    <input type="text" class="input-editable" id="name-${safeId}" value="${d.unit_name || ''}">
                 </td>
                 <td>
-                    <input type="text" class="input-editable" id="proceed-${d.device_id}" value="${d.proceed_text}">
+                    <input type="text" class="input-editable" id="proceed-${safeId}" value="${d.proceed_text || ''}">
                 </td>
                 <td>
                     <span class="status-dot"></span>${d.last_seen ? d.last_seen.slice(11, 16) : 'Online'}
@@ -673,16 +682,19 @@ function renderDevices(devices){
                         <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
                     </button>
                 </td>
-            </tr>
-        `).join("");
+            </tr>`;
+        }).join("");
     }
 }
 
 function saveDevice(deviceId){
-    const unitName = document.getElementById("name-" + deviceId).value.trim();
-    const proceedText = document.getElementById("proceed-" + deviceId).value.trim();
+    const safeId = deviceId.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const nameEl = document.getElementById("name-" + safeId) || document.getElementById("name-" + deviceId);
+    const procEl = document.getElementById("proceed-" + safeId) || document.getElementById("proceed-" + deviceId);
+    const unitName = nameEl ? nameEl.value.trim() : "";
+    const proceedText = procEl ? procEl.value.trim() : "";
 
-    fetch("/api/device/update", {
+    fetch(`${API_URL}/api/device/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -704,7 +716,7 @@ function saveDevice(deviceId){
 function deleteDevice(deviceId){
     if (!confirm("Are you sure you want to unregister this device?")) return;
 
-    fetch("/api/device/delete", {
+    fetch(`${API_URL}/api/device/delete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ device_id: deviceId })
@@ -736,6 +748,12 @@ socket.on("queue_reset", function(){
 // Initial load
 loadDevices();
 loadStats();
+
+// Auto-refresh devices and stats every 4 seconds
+setInterval(function(){
+    loadDevices();
+    loadStats();
+}, 4000);
 </script>
 </body>
 </html>

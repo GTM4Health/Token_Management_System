@@ -108,6 +108,21 @@ def resolve_counter(data):
         conn.commit()
         conn.close()
         return proceed_text, unit_name
+
+    if target_key:
+        cursor.execute("SELECT COUNT(*) FROM devices WHERE device_type='calling_unit'")
+        cnt = cursor.fetchone()[0] + 1
+        unit_name = f"Calling Unit {cnt}"
+        proceed_text = f"Room {cnt}"
+        cursor.execute("""
+            INSERT INTO devices (device_id, device_type, unit_number, unit_name, proceed_text)
+            VALUES (?, 'calling_unit', ?, ?, ?)
+        """, (target_key, cnt, unit_name, proceed_text))
+        conn.commit()
+        conn.close()
+        socketio.emit("devices_updated")
+        return proceed_text, unit_name
+
     conn.close()
 
     if explicit_counter:
@@ -470,6 +485,11 @@ def generate_token():
 
     data = request.get_json(silent=True) or {}
     device_id = (data.get("device_id") or "").strip().upper()
+
+    if not device_id:
+        client_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+        if client_ip:
+            device_id = f"IP:{client_ip.split(',')[0].strip()}"
 
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
