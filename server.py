@@ -109,8 +109,8 @@ def resolve_counter(data):
         conn.close()
         return proceed_text, unit_name
 
-    if target_key:
-        cursor.execute("SELECT COUNT(*) FROM devices WHERE device_type='calling_unit'")
+    if target_key and not target_key.startswith("IP:"):
+        cursor.execute("SELECT COUNT(*) FROM devices WHERE device_type='calling_unit' AND device_id NOT LIKE 'IP:%'")
         cnt = cursor.fetchone()[0] + 1
         unit_name = f"Calling Unit {cnt}"
         proceed_text = f"Room {cnt}"
@@ -384,20 +384,26 @@ def list_devices():
         SELECT id, device_id, device_type, unit_number, unit_name, proceed_text, last_seen,
                ROUND((strftime('%s', 'now') - strftime('%s', last_seen))) as seconds_ago
         FROM devices
-        ORDER BY device_type ASC, unit_number ASC
+        WHERE device_id NOT LIKE 'IP:%'
+        ORDER BY device_type ASC, id ASC
     """)
     rows = cursor.fetchall()
     conn.close()
 
     devices = []
+    type_counts = {}
     for r in rows:
+        d_type = r[2]
+        type_counts[d_type] = type_counts.get(d_type, 0) + 1
+        clean_num = type_counts[d_type]
         seconds_ago = r[7] if r[7] is not None else 999999
-        is_online = seconds_ago <= 180  # Online if active in last 3 minutes
+        # Online if heartbeat received in last 60 seconds
+        is_online = seconds_ago <= 60
         devices.append({
             "id": r[0],
             "device_id": r[1],
-            "device_type": r[2],
-            "unit_number": r[3],
+            "device_type": d_type,
+            "unit_number": clean_num,
             "unit_name": r[4],
             "proceed_text": r[5],
             "last_seen": r[6],
@@ -551,15 +557,10 @@ def generate_token():
     data = request.get_json(silent=True) or {}
     device_id = (data.get("device_id") or "").strip().upper()
 
-    if not device_id:
-        client_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
-        if client_ip:
-            device_id = f"IP:{client_ip.split(',')[0].strip()}"
-
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    if device_id:
+    if device_id and not device_id.startswith("IP:"):
         cursor.execute("SELECT id FROM devices WHERE device_id=?", (device_id,))
         if cursor.fetchone():
             cursor.execute("UPDATE devices SET last_seen=CURRENT_TIMESTAMP WHERE device_id=?", (device_id,))

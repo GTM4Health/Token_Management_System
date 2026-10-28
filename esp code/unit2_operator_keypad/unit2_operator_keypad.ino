@@ -357,8 +357,8 @@ void loop() {
         return;
     }
 
-    // ── Background heartbeat ping every 30 s to maintain "Online" status ──
-    if (WiFi.status() == WL_CONNECTED && millis() - lastPingTime >= 30000) {
+    // ── Background heartbeat ping every 20 s to maintain "Online" status ──
+    if (WiFi.status() == WL_CONNECTED && millis() - lastPingTime >= 20000) {
         lastPingTime = millis();
         HTTPClient http;
         http.setTimeout(2500);

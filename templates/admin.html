@@ -468,20 +468,7 @@ tr:hover {
             </div>
             <span class="material-symbols-outlined stat-icon">print</span>
         </div>
-        <div class="stat-card success">
-            <div class="stat-info">
-                <h4>Currently Serving</h4>
-                <div class="stat-value" id="count-serving">0</div>
-            </div>
-            <span class="material-symbols-outlined stat-icon">notifications_active</span>
-        </div>
-        <div class="stat-card">
-            <div class="stat-info">
-                <h4>Waiting Queue</h4>
-                <div class="stat-value" id="count-waiting">0</div>
-            </div>
-            <span class="material-symbols-outlined stat-icon">group</span>
-        </div>
+
     </div>
 
     <!-- Calling Units Section -->
@@ -601,17 +588,7 @@ function showToast(msg){
 }
 
 function loadStats(){
-    fetch(`${API_URL}/serving_all`)
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById("count-serving").innerText = data.length || 0;
-        }).catch(() => {});
-
-    fetch(`${API_URL}/waiting`)
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById("count-waiting").innerText = data.length || 0;
-        }).catch(() => {});
+    // Stat cards for serving & waiting removed from admin page
 }
 
 function loadDevices(force = false){
