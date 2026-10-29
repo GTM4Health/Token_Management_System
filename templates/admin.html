@@ -456,17 +456,17 @@ tr:hover {
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-info">
-                <h4>Total Calling Units</h4>
+                <h4>Calling Units</h4>
                 <div class="stat-value" id="count-calling">0</div>
             </div>
             <span class="material-symbols-outlined stat-icon">phone_in_talk</span>
         </div>
-        <div class="stat-card success">
+        <div class="stat-card accent">
             <div class="stat-info">
-                <h4>Online Units</h4>
-                <div class="stat-value" id="count-online">0</div>
+                <h4>Dispensers</h4>
+                <div class="stat-value" id="count-dispensers">0</div>
             </div>
-            <span class="material-symbols-outlined stat-icon">sensors</span>
+            <span class="material-symbols-outlined stat-icon">print</span>
         </div>
 
     </div>
@@ -512,7 +512,43 @@ tr:hover {
         </div>
     </div>
 
+    <!-- Token Dispensers Section -->
+    <div class="card-section">
+        <div class="section-header">
+            <div>
+                <div class="section-title">
+                    <span class="material-symbols-outlined">confirmation_number</span>
+                    Registered Token Dispensers
+                </div>
+                <div class="section-subtitle">
+                    Kiosks and push-button dispensers connected to the system.
+                </div>
+            </div>
+        </div>
 
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">Unit #</th>
+                        <th style="width: 170px;">Device MAC</th>
+                        <th>Dispenser Name</th>
+                        <th>Location / Gate</th>
+                        <th style="width: 130px;">Status</th>
+                        <th style="width: 180px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="dispensers-table">
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <span class="material-symbols-outlined">hourglass_empty</span>
+                            No dispensers registered yet.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <div class="footer">
@@ -575,28 +611,18 @@ function renderDevices(devices, force = false){
     const dirtyInputs = document.querySelectorAll("input[data-dirty='true']");
 
     if (!force && (isTyping || dirtyInputs.length > 0)) {
-        // User is editing; do NOT wipe out input fields, but update live status badges
-        devices.forEach(d => {
-            const safeId = d.device_id.replace(/[^a-zA-Z0-9_-]/g, '_');
-            const cell = document.getElementById("status-cell-" + safeId);
-            if (cell) {
-                cell.innerHTML = d.status === 'Online'
-                    ? '<span class="status-badge status-online"><span class="status-dot dot-online"></span>Online</span>'
-                    : '<span class="status-badge status-offline"><span class="status-dot dot-offline"></span>Offline</span>';
-            }
-        });
+        // User is editing; do NOT wipe out input fields or reset cursor
         return;
     }
 
     const callingBody = document.getElementById("calling-units-table");
+    const dispenserBody = document.getElementById("dispensers-table");
+
     const callingUnits = devices.filter(d => d.device_type === "calling_unit");
-    const onlineUnits = callingUnits.filter(d => d.status === "Online");
+    const dispensers = devices.filter(d => d.device_type === "dispenser");
 
-    const countCallingEl = document.getElementById("count-calling");
-    if (countCallingEl) countCallingEl.innerText = callingUnits.length;
-
-    const countOnlineEl = document.getElementById("count-online");
-    if (countOnlineEl) countOnlineEl.innerText = onlineUnits.length;
+    document.getElementById("count-calling").innerText = callingUnits.length;
+    document.getElementById("count-dispensers").innerText = dispensers.length;
 
     // Render Calling Units
     if (callingUnits.length === 0){
@@ -623,7 +649,7 @@ function renderDevices(devices, force = false){
                         <input type="text" class="input-editable" id="proceed-${safeId}" value="${d.proceed_text || ''}" oninput="this.dataset.dirty='true'" onkeydown="if(event.key==='Enter')saveDevice('${d.device_id}')">
                     </div>
                 </td>
-                <td id="status-cell-${safeId}">
+                <td>
                     ${d.status === 'Online' ? '<span class="status-badge status-online"><span class="status-dot dot-online"></span>Online</span>' : '<span class="status-badge status-offline"><span class="status-dot dot-offline"></span>Offline</span>'}
                 </td>
                 <td>
@@ -631,6 +657,43 @@ function renderDevices(devices, force = false){
                         <span class="material-symbols-outlined" style="font-size:16px;">save</span> Save
                     </button>
                     <button class="btn btn-danger" onclick="deleteDevice('${d.device_id}')" title="Unpair Device">
+                        <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
+                    </button>
+                </td>
+            </tr>`;
+        }).join("");
+    }
+
+    // Render Dispensers
+    if (dispensers.length === 0){
+        dispenserBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty-state">
+                    <span class="material-symbols-outlined">sensors_off</span>
+                    No dispensers registered yet.
+                </td>
+            </tr>`;
+    } else {
+        dispenserBody.innerHTML = dispensers.map(d => {
+            const safeId = d.device_id.replace(/[^a-zA-Z0-9_-]/g, '_');
+            return `
+            <tr id="row-${safeId}">
+                <td><span class="badge badge-unit">#${d.unit_number}</span></td>
+                <td><span class="mac-code">${d.device_id}</span></td>
+                <td>
+                    <input type="text" class="input-editable" id="name-${safeId}" value="${d.unit_name || ''}" oninput="this.dataset.dirty='true'" onkeydown="if(event.key==='Enter')saveDevice('${d.device_id}')">
+                </td>
+                <td>
+                    <input type="text" class="input-editable" id="proceed-${safeId}" value="${d.proceed_text || ''}" oninput="this.dataset.dirty='true'" onkeydown="if(event.key==='Enter')saveDevice('${d.device_id}')">
+                </td>
+                <td>
+                    ${d.status === 'Online' ? '<span class="status-badge status-online"><span class="status-dot dot-online"></span>Online</span>' : '<span class="status-badge status-offline"><span class="status-dot dot-offline"></span>Offline</span>'}
+                </td>
+                <td>
+                    <button class="btn btn-primary" onclick="saveDevice('${d.device_id}', this)">
+                        <span class="material-symbols-outlined" style="font-size:16px;">save</span> Save
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteDevice('${d.device_id}')">
                         <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
                     </button>
                 </td>
@@ -719,7 +782,7 @@ loadStats();
 setInterval(function(){
     loadDevices();
     loadStats();
-}, 1500);
+}, 4000);
 </script>
 </body>
 </html>
