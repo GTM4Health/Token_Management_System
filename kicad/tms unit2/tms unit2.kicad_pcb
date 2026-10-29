@@ -90,13 +90,13 @@
 	(footprint "Capacitor_SMD:C_0805_2012Metric"
 		(layer "F.Cu")
 		(uuid "25f46e24-f458-47c1-9d01-5e808d7a7d73")
-		(at 131.225 118.325)
+		(at 137.95 121.81)
 		(descr "Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)")
 		(tags "capacitor")
 		(property "Reference" "C3"
 			(at 0 -1.68 0)
 			(layer "F.SilkS")
-			(uuid "c6988329-675f-4c08-a144-8cd97cce5e7d")
+			(uuid "f927c4d8-e910-40d2-a033-9c4e49373066")
 			(effects
 				(font
 					(size 1 1)
@@ -107,7 +107,7 @@
 		(property "Value" "100nF"
 			(at 0 1.68 0)
 			(layer "F.Fab")
-			(uuid "f8c32fc1-d80b-43c6-8d45-a7a7342ded54")
+			(uuid "6c60b794-3819-45c6-9db6-963c1295a557")
 			(effects
 				(font
 					(size 1 1)
@@ -119,7 +119,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "86d58ff7-66d5-4cd0-afe0-202eb21f61f9")
+			(uuid "7d3d5b6d-0e0b-4a65-b4f9-1f31f47c0d4e")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -130,7 +130,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "9713382d-6d0c-4ac7-bb37-d3cb57327168")
+			(uuid "01d38542-4206-4721-9369-d6115242da31")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -248,13 +248,13 @@
 	(footprint "Package_TO_SOT_SMD:SOT-223-3_TabPin2"
 		(layer "F.Cu")
 		(uuid "2a545273-d6b8-45b9-8e2e-c7a1334015e6")
-		(at 142.785 124.3)
+		(at 149.51 127.785)
 		(descr "module CMS SOT223 4 pins")
 		(tags "CMS SOT")
 		(property "Reference" "U2"
 			(at 0 -4.5 0)
 			(layer "F.SilkS")
-			(uuid "4d9eeb37-c043-4349-ba4e-a74c3c083859")
+			(uuid "d58881d3-b031-41b5-b40e-7d0d4b849c97")
 			(effects
 				(font
 					(size 1 1)
@@ -265,7 +265,7 @@
 		(property "Value" "AMS1117-3.3"
 			(at 0 4.5 0)
 			(layer "F.Fab")
-			(uuid "eea4a7ed-6160-4fc2-80c2-0fb90a11b21b")
+			(uuid "71e10d04-741e-443b-af75-d3741b98edae")
 			(effects
 				(font
 					(size 1 1)
@@ -278,7 +278,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "1aec0135-59c2-41e8-927e-db6ea516b331")
+			(uuid "c6c12140-98d0-46b2-848a-ad392a1fc2cd")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -291,7 +291,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "d9a1c614-5501-4e8f-96d6-80e3d41c1483")
+			(uuid "13760203-1e45-44e8-b53c-9888f01393d3")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -519,13 +519,13 @@
 	(footprint "Button_Switch_SMD:SW_SPST_PTS645Sx43SMTR92"
 		(layer "F.Cu")
 		(uuid "7876eec2-3f13-442b-99e6-ad2c2f843b5a")
-		(at 183.625 80.275)
+		(at 190.5 93)
 		(descr "Tactile switch, 6x6 mm, H4.3 mm, gullwing terminals, https://www.ckswitches.com/media/1471/pts645.pdf")
 		(tags "SPST Button Switch CK C&K")
 		(property "Reference" "SW2"
 			(at 0 -4.05 0)
 			(layer "F.SilkS")
-			(uuid "771f278b-6c56-41b8-9abd-5b5e290d55a3")
+			(uuid "f270ad88-2a12-462b-85a9-b03373a47365")
 			(effects
 				(font
 					(size 1 1)
@@ -534,9 +534,9 @@
 			)
 		)
 		(property "Value" "CALL_AGAIN"
-			(at 0 4.15 0)
+			(at -10.827459 9.403219 0)
 			(layer "F.Fab")
-			(uuid "8f0c7fb7-ca3c-43ff-b140-52403746eacc")
+			(uuid "e72aea7e-6d3a-4b44-809f-41e25955e3ff")
 			(effects
 				(font
 					(size 1 1)
@@ -549,7 +549,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "96533afe-f613-4cf5-9b62-0b62359059c5")
+			(uuid "25a487a7-1091-405a-90f8-419a7debe804")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -562,7 +562,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "29e0b5e9-9ffa-450e-95c5-d42a7f8afa8b")
+			(uuid "acaa0bb3-fe9a-46ed-8041-11276bdc7d26")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -819,13 +819,13 @@
 	(footprint "Capacitor_SMD:C_0805_2012Metric"
 		(layer "F.Cu")
 		(uuid "79a3c24c-5343-454c-80b1-84d3cd32f63e")
-		(at 131.225 112.305)
+		(at 137.95 115.79)
 		(descr "Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)")
 		(tags "capacitor")
 		(property "Reference" "C1"
 			(at 0 -1.68 0)
 			(layer "F.SilkS")
-			(uuid "b26208ac-aecc-444f-8fa1-1a050c788bc1")
+			(uuid "61b25397-3789-4db5-b7ac-a4c541537ba2")
 			(effects
 				(font
 					(size 1 1)
@@ -836,7 +836,7 @@
 		(property "Value" "10uF"
 			(at 0 1.68 0)
 			(layer "F.Fab")
-			(uuid "3a4dc107-32d3-48e8-9119-e940404a4640")
+			(uuid "8883a3a8-2e3b-4bc3-9dcc-579df488da5a")
 			(effects
 				(font
 					(size 1 1)
@@ -848,7 +848,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "84bf0cd2-9af0-48d5-be87-291b6975805b")
+			(uuid "71e7bb04-3bd5-4e3d-95b5-0d0c06e89d71")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -859,7 +859,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "986a4152-7766-46d0-9b11-c83d7cc89b7a")
+			(uuid "ddc8a8dc-f73c-48c7-8ffa-e601b509c82e")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -977,13 +977,13 @@
 	(footprint "Button_Switch_SMD:SW_SPST_PTS645Sx43SMTR92"
 		(layer "F.Cu")
 		(uuid "84443f54-edbd-4ac4-a097-11ea1b7c3f0d")
-		(at 183.625 72.425)
+		(at 190.52 107.75)
 		(descr "Tactile switch, 6x6 mm, H4.3 mm, gullwing terminals, https://www.ckswitches.com/media/1471/pts645.pdf")
 		(tags "SPST Button Switch CK C&K")
 		(property "Reference" "SW1"
 			(at 0 -4.05 0)
 			(layer "F.SilkS")
-			(uuid "f2910f19-1bc2-4fb7-aa2d-4bbf5b0d4b26")
+			(uuid "be4d6f4a-cbdf-40fb-9f30-542b6ab90031")
 			(effects
 				(font
 					(size 1 1)
@@ -992,9 +992,9 @@
 			)
 		)
 		(property "Value" "NEXT"
-			(at 0 4.15 0)
+			(at -10.827459 9.403219 0)
 			(layer "F.Fab")
-			(uuid "4084df16-7284-45f2-a78b-c79195fc2b0c")
+			(uuid "1300498e-fca2-4b22-9099-5a8c3df94fb9")
 			(effects
 				(font
 					(size 1 1)
@@ -1007,7 +1007,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "8de332e8-ef55-43bf-8d18-b40572355a19")
+			(uuid "d43bc0fd-9b58-40b3-89c0-0d12324d9d90")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1020,7 +1020,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "5358910b-3395-49db-b2f7-a139f92009b1")
+			(uuid "58f52fab-f75f-4d26-a02c-f19cea95d391")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1277,13 +1277,13 @@
 	(footprint "RF_Module:ESP32-WROOM-32"
 		(layer "F.Cu")
 		(uuid "9396cee1-c7b5-4184-b2f7-63e14a09d341")
-		(at 153.525 99.765)
+		(at 160.25 103.25)
 		(descr "Single 2.4 GHz Wi-Fi and Bluetooth combo chip https://www.espressif.com/sites/default/files/documentation/esp32-wroom-32_datasheet_en.pdf")
 		(tags "Single 2.4 GHz Wi-Fi and Bluetooth combo  chip")
 		(property "Reference" "U1"
 			(at -10.61 8.43 90)
 			(layer "F.SilkS")
-			(uuid "2fd7830f-e7c0-4977-9c99-f4dc68fd9267")
+			(uuid "7297eeef-38db-4eb6-95eb-81f9e9b6c0c3")
 			(effects
 				(font
 					(size 1 1)
@@ -1294,7 +1294,7 @@
 		(property "Value" "ESP32-WROOM-32"
 			(at 0 11.5 0)
 			(layer "F.Fab")
-			(uuid "c9ce072c-dd85-47e9-995d-96e1eef2aaf8")
+			(uuid "1c53323c-0e4c-46cb-9a4a-82caf4cab3d2")
 			(effects
 				(font
 					(size 1 1)
@@ -1307,7 +1307,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "c66fa739-b37e-4de3-972d-e92e1544e9f0")
+			(uuid "310fc918-e6c8-4366-bc99-1fa4ce003fa7")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1320,7 +1320,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "eaa7f578-b0c3-485a-ad6f-527399c2bd4f")
+			(uuid "0784c8e9-a8bf-43e0-9d58-caffb6c45a17")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2224,7 +2224,7 @@
 			)
 			(polygon
 				(pts
-					(xy 129.525 89.965) (xy 177.525 89.965) (xy 177.525 69.025) (xy 129.525 69.025)
+					(xy 136.25 93.45) (xy 184.25 93.45) (xy 184.25 72.51) (xy 136.25 72.51)
 				)
 			)
 		)
@@ -2244,13 +2244,13 @@
 	(footprint "Resistor_SMD:R_0805_2012Metric"
 		(layer "F.Cu")
 		(uuid "9e43d7e6-5392-4277-84da-e9c7ec35928b")
-		(at 135.655 115.225)
+		(at 142.38 118.71)
 		(descr "Resistor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)")
 		(tags "resistor")
 		(property "Reference" "R2"
 			(at 0 -1.65 0)
 			(layer "F.SilkS")
-			(uuid "448c7b42-d295-4f6c-9e8d-01e1ab3d4dce")
+			(uuid "b7b938c1-382f-4bc7-be19-db620ff14c41")
 			(effects
 				(font
 					(size 1 1)
@@ -2261,7 +2261,7 @@
 		(property "Value" "5.1k"
 			(at 0 1.65 0)
 			(layer "F.Fab")
-			(uuid "aa218a81-8004-4e4e-af83-fe621fbfff9d")
+			(uuid "a2d07a2e-1ab5-463a-bd79-3cec4ab48dc1")
 			(effects
 				(font
 					(size 1 1)
@@ -2273,7 +2273,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "03277c5e-32de-4fdc-9951-7d66c3a429da")
+			(uuid "dbcbf3e4-ee74-4d13-be90-5bc0466cd68b")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2284,7 +2284,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "77474d70-8416-4951-932f-401cf1de090c")
+			(uuid "e646edd1-0c4f-478d-8e19-a3a1461f07ee")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2402,13 +2402,13 @@
 	(footprint "Capacitor_SMD:C_0805_2012Metric"
 		(layer "F.Cu")
 		(uuid "a8121cd2-ffad-49f5-a9e4-bd32a6116b13")
-		(at 131.225 124.345)
+		(at 137.95 127.83)
 		(descr "Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)")
 		(tags "capacitor")
 		(property "Reference" "C_DB1"
 			(at 0 -1.68 0)
 			(layer "F.SilkS")
-			(uuid "140c78a0-8772-444f-bb63-8c40cd2a2731")
+			(uuid "55b3efd6-dfb9-4547-9c46-b9e03254241b")
 			(effects
 				(font
 					(size 1 1)
@@ -2419,7 +2419,7 @@
 		(property "Value" "100nF"
 			(at 0 1.68 0)
 			(layer "F.Fab")
-			(uuid "c3570848-b520-4227-a8a4-5eefb42a196a")
+			(uuid "f24d44de-db03-4598-aa6f-c52115586892")
 			(effects
 				(font
 					(size 1 1)
@@ -2431,7 +2431,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "94fb7458-5559-405a-b113-d4f7d5ecc443")
+			(uuid "ae3ef5c3-51d7-41fc-825d-f0605c7aeaab")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2442,7 +2442,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "1ebd50f9-beb6-422c-8600-f99280ada106")
+			(uuid "4468e2a0-29f0-49a9-9c8f-59fcb2e14b62")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2560,13 +2560,13 @@
 	(footprint "Button_Switch_SMD:SW_SPST_PTS645Sx43SMTR92"
 		(layer "F.Cu")
 		(uuid "b448047d-978e-423f-86ad-643648a5a52f")
-		(at 183.625 88.125)
+		(at 190.52 122.9)
 		(descr "Tactile switch, 6x6 mm, H4.3 mm, gullwing terminals, https://www.ckswitches.com/media/1471/pts645.pdf")
 		(tags "SPST Button Switch CK C&K")
 		(property "Reference" "SW3"
 			(at 0 -4.05 0)
 			(layer "F.SilkS")
-			(uuid "a1f9a059-52e6-46fb-9e85-521151fa4de2")
+			(uuid "fb0896a6-f80e-4841-8822-f29c0c71cd4e")
 			(effects
 				(font
 					(size 1 1)
@@ -2575,9 +2575,9 @@
 			)
 		)
 		(property "Value" "RESET_QUEUE"
-			(at 0 4.15 0)
+			(at -10.827459 9.403219 0)
 			(layer "F.Fab")
-			(uuid "852e2e17-1f07-43ad-89ca-ae84974773c4")
+			(uuid "e7e16b7d-438d-4cef-a686-b6a00f16ced2")
 			(effects
 				(font
 					(size 1 1)
@@ -2590,7 +2590,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "696eccac-3b57-4fa0-9fc6-68c837f45c79")
+			(uuid "464aec8d-df90-48a2-bfc5-297d9c4df230")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2603,7 +2603,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "9b9a79d3-0be1-4333-a780-5bddd256bce5")
+			(uuid "3d669706-efca-4c3a-b3b2-38d41a365a38")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2860,13 +2860,13 @@
 	(footprint "Capacitor_SMD:C_0805_2012Metric"
 		(layer "F.Cu")
 		(uuid "b8213931-9881-41cc-99e1-e9221170040b")
-		(at 131.225 121.335)
+		(at 137.95 124.82)
 		(descr "Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)")
 		(tags "capacitor")
 		(property "Reference" "C4"
 			(at 0 -1.68 0)
 			(layer "F.SilkS")
-			(uuid "ddf8dee1-6a1f-418b-8f02-fcb6a22a6b3c")
+			(uuid "df73c263-7c9f-465d-9957-e9e61bbc1d87")
 			(effects
 				(font
 					(size 1 1)
@@ -2877,7 +2877,7 @@
 		(property "Value" "100nF"
 			(at 0 1.68 0)
 			(layer "F.Fab")
-			(uuid "16e0189d-d3fc-40b2-bfd4-f5587dc4a1cd")
+			(uuid "8f84a3a2-8fc7-4157-affe-710eddee75e3")
 			(effects
 				(font
 					(size 1 1)
@@ -2889,7 +2889,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "04961771-8994-4be5-a460-331fd89e1a07")
+			(uuid "f218e9b2-c24e-4909-b148-b83cd97a89e6")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2900,7 +2900,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "7bb9dff2-6317-4f68-b2b1-b7957f8ab16d")
+			(uuid "5d73e87a-8185-46d7-bf2c-5635758eed6c")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3018,13 +3018,13 @@
 	(footprint "Resistor_SMD:R_0805_2012Metric"
 		(layer "F.Cu")
 		(uuid "b8f2ed2d-5de5-4271-a4ca-22282f153650")
-		(at 135.655 121.125)
+		(at 142.38 124.61)
 		(descr "Resistor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)")
 		(tags "resistor")
 		(property "Reference" "R4"
 			(at 0 -1.65 0)
 			(layer "F.SilkS")
-			(uuid "8f4eb8db-628b-4b10-a6cf-e84ee393d22d")
+			(uuid "6bd2fb5c-f8df-4ae7-a017-2fd5dd567bb8")
 			(effects
 				(font
 					(size 1 1)
@@ -3035,7 +3035,7 @@
 		(property "Value" "10k"
 			(at 0 1.65 0)
 			(layer "F.Fab")
-			(uuid "2db1b59a-fa1b-403f-ad80-4dc54d802b9b")
+			(uuid "9ece4add-69a9-498c-bcb1-13ec257855d0")
 			(effects
 				(font
 					(size 1 1)
@@ -3047,7 +3047,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "f1662bca-5ec8-4c8f-8c79-305881dc674b")
+			(uuid "a3df55f5-42fe-41d1-a9b6-4765a866f94a")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3058,7 +3058,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "3de6a986-1698-47a5-a08f-4c9a2827de5e")
+			(uuid "81a2a64d-c37a-40d4-9b2e-b9591162fb08")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3176,13 +3176,13 @@
 	(footprint "Capacitor_SMD:C_0805_2012Metric"
 		(layer "F.Cu")
 		(uuid "b92c7960-5096-452b-9fd4-736ddd96e484")
-		(at 131.225 130.365)
+		(at 137.95 133.85)
 		(descr "Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)")
 		(tags "capacitor")
 		(property "Reference" "C_DB3"
 			(at 0 -1.68 0)
 			(layer "F.SilkS")
-			(uuid "8eac9edb-4b4c-4bca-ac7e-228600d22a17")
+			(uuid "6af6bd3c-4c89-4f13-96ed-6e4d080e676a")
 			(effects
 				(font
 					(size 1 1)
@@ -3193,7 +3193,7 @@
 		(property "Value" "100nF"
 			(at 0 1.68 0)
 			(layer "F.Fab")
-			(uuid "174a7639-e287-4ede-888a-024b331f35e4")
+			(uuid "19be368b-3055-41ea-8d2c-788af7da25ca")
 			(effects
 				(font
 					(size 1 1)
@@ -3205,7 +3205,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "aeda651f-a0ad-4791-828f-6a4a59828ab6")
+			(uuid "ede21f9d-a620-4a94-9484-393fd783a059")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3216,7 +3216,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "bdc7acac-18fb-4541-a8f8-cefa7db6cbdd")
+			(uuid "6e1d4825-2eee-4ab2-8c69-d32a5580647e")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3334,13 +3334,13 @@
 	(footprint "Capacitor_SMD:C_0805_2012Metric"
 		(layer "F.Cu")
 		(uuid "bbab1fc5-07a8-415b-85cc-4a9abe2335ab")
-		(at 131.225 127.355)
+		(at 137.95 130.84)
 		(descr "Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)")
 		(tags "capacitor")
 		(property "Reference" "C_DB2"
 			(at 0 -1.68 0)
 			(layer "F.SilkS")
-			(uuid "aa7d2571-757c-411a-b05e-a12c439e0182")
+			(uuid "0433a72e-364c-42b0-bd7a-5cd76c1ae62f")
 			(effects
 				(font
 					(size 1 1)
@@ -3351,7 +3351,7 @@
 		(property "Value" "100nF"
 			(at 0 1.68 0)
 			(layer "F.Fab")
-			(uuid "1c150d8a-656a-4288-bf65-19d0cc8de118")
+			(uuid "6a051ecc-97d7-4683-b614-f52ba996485a")
 			(effects
 				(font
 					(size 1 1)
@@ -3363,7 +3363,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "e25ddc3c-753a-48de-b238-880cc8f4b479")
+			(uuid "cfe619d6-84d4-4ff1-b865-25184f62695c")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3374,7 +3374,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "30169d0f-40ac-447f-b638-06d97371b76f")
+			(uuid "a1863e34-c0e9-4fa9-89d8-f2f7c51ae152")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3492,13 +3492,13 @@
 	(footprint "Resistor_SMD:R_0805_2012Metric"
 		(layer "F.Cu")
 		(uuid "c1309c4a-17d0-47a2-87ac-fe3062a67d5d")
-		(at 135.655 112.275)
+		(at 142.38 115.76)
 		(descr "Resistor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)")
 		(tags "resistor")
 		(property "Reference" "R1"
 			(at 0 -1.65 0)
 			(layer "F.SilkS")
-			(uuid "90fd52c3-a286-4ab0-9e2b-f7d2c4b9a814")
+			(uuid "5b970694-098e-4301-b960-4cca26c79f85")
 			(effects
 				(font
 					(size 1 1)
@@ -3509,7 +3509,7 @@
 		(property "Value" "5.1k"
 			(at 0 1.65 0)
 			(layer "F.Fab")
-			(uuid "fffffc8d-6ef1-4bc2-98a5-2b6e8dbdd18a")
+			(uuid "f0b7bf9c-81a2-4cc3-96a0-2bb2b4577c40")
 			(effects
 				(font
 					(size 1 1)
@@ -3521,7 +3521,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "79d23ac4-9bbb-4e5e-914d-263570a05674")
+			(uuid "e63e3216-de8b-412d-ac5d-cc98f948eec4")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3532,7 +3532,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "ad79de1c-fe71-4016-ac2c-3077bf8512ca")
+			(uuid "28a6c8ac-28f4-4830-a32e-4a239b62f060")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3650,14 +3650,14 @@
 	(footprint "Connector_USB:USB_C_Receptacle_GCT_USB4125-xx-x_6P_TopMnt_Horizontal"
 		(layer "F.Cu")
 		(uuid "cb8ae608-ad48-42f7-9c70-9e7fafc94fac")
-		(at 143.755 115.675)
+		(at 221.5 108.5 90)
 		(descr "USB Type C Receptacle, GCT, power-only, 6P, top mounted, horizontal, 3A, 1mm stake: https://gct.co/files/drawings/usb4125.pdf")
 		(tags "USB C Type-C receptacle power-only charging-only 6P 6C right angled")
 		(property "Reference" "J1"
-			(at 0 -5.1 0)
+			(at 0 -5.1 90)
 			(unlocked yes)
 			(layer "F.SilkS")
-			(uuid "95e206e6-d4e0-4357-88f1-b762c107b5a9")
+			(uuid "6baa9973-d52d-4cea-833a-eb3d869b3d95")
 			(effects
 				(font
 					(size 1 1)
@@ -3666,10 +3666,10 @@
 			)
 		)
 		(property "Value" "USB_C_Receptacle_PowerOnly_6P"
-			(at 0 4.725 0)
+			(at 0 4.725 90)
 			(unlocked yes)
 			(layer "F.Fab")
-			(uuid "1c02d811-3d99-4eda-92d2-659be0a35062")
+			(uuid "09077095-2e5a-4484-a073-f9ff10599010")
 			(effects
 				(font
 					(size 1 1)
@@ -3678,11 +3678,11 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 0 0 0)
+			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "5a33afe4-aaf5-4781-8909-5c33aac7315c")
+			(uuid "1006fac0-03de-4684-9dd9-43adb1148414")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3691,11 +3691,11 @@
 			)
 		)
 		(property "Description" ""
-			(at 0 0 0)
+			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "958d2b71-74f1-4f8c-95e5-f4ff30160445")
+			(uuid "2eb8e385-c5c1-489d-9a03-fa8cc6c140dc")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3716,16 +3716,6 @@
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
-			(start -4.67 -0.25)
-			(end -4.67 -1.95)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "b7a76d00-ff09-45f5-9203-c4060f49b1d3")
-		)
-		(fp_line
 			(start 4.67 -0.25)
 			(end 4.67 -1.95)
 			(stroke
@@ -3734,6 +3724,16 @@
 			)
 			(layer "F.SilkS")
 			(uuid "bd369c08-3b1e-41d7-ae2b-cfd3a0074eb6")
+		)
+		(fp_line
+			(start -4.67 -0.25)
+			(end -4.67 -1.95)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "b7a76d00-ff09-45f5-9203-c4060f49b1d3")
 		)
 		(fp_line
 			(start 5 3.4)
@@ -3768,7 +3768,7 @@
 			(uuid "d2394771-7c57-4293-af4b-574a95c857c5")
 		)
 		(fp_text user "PCB Edge"
-			(at 0 2.825 0)
+			(at 0 2.825 90)
 			(unlocked yes)
 			(layer "Dwgs.User")
 			(uuid "b7560315-aea5-4cf9-aae8-493ec12587b5")
@@ -3780,7 +3780,7 @@
 			)
 		)
 		(fp_text user "${REFERENCE}"
-			(at 0 -0.275 0)
+			(at 0 -0.275 90)
 			(unlocked yes)
 			(layer "F.Fab")
 			(uuid "4707ccd3-41bf-4fbe-9305-61ad4763049b")
@@ -3792,7 +3792,7 @@
 			)
 		)
 		(pad "A5" smd roundrect
-			(at -0.5 -3.08)
+			(at -0.5 -3.08 90)
 			(size 0.7 1.2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -3802,7 +3802,7 @@
 			(uuid "c817a350-3a4e-455d-822e-fc0d9283ce58")
 		)
 		(pad "A9" smd roundrect
-			(at 1.52 -3.08 180)
+			(at 1.52 -3.08 270)
 			(size 0.76 1.2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -3812,7 +3812,7 @@
 			(uuid "320a47f6-cd0c-4996-bd67-a7788e66d9ae")
 		)
 		(pad "A12" smd roundrect
-			(at 2.75 -3.08 180)
+			(at 2.75 -3.08 270)
 			(size 0.8 1.2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -3822,7 +3822,7 @@
 			(uuid "cc4eeaaf-5193-4225-a837-0d91969bfe7c")
 		)
 		(pad "B5" smd roundrect
-			(at 0.5 -3.08 180)
+			(at 0.5 -3.08 270)
 			(size 0.7 1.2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -3832,7 +3832,7 @@
 			(uuid "11580a25-d614-43ff-8d40-7b2597b846a1")
 		)
 		(pad "B9" smd roundrect
-			(at -1.52 -3.08)
+			(at -1.52 -3.08 90)
 			(size 0.76 1.2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -3842,7 +3842,7 @@
 			(uuid "24f4bf84-9bb8-4462-864f-1496ff0d39fc")
 		)
 		(pad "B12" smd roundrect
-			(at -2.75 -3.08)
+			(at -2.75 -3.08 90)
 			(size 0.8 1.2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -3852,7 +3852,7 @@
 			(uuid "9fe8b4b5-e242-410e-a2c2-fa0efcf204f5")
 		)
 		(pad "SH" thru_hole oval
-			(at -4.32 -3)
+			(at -4.32 -3 90)
 			(size 1.1 1.7)
 			(drill oval 0.6 1.2)
 			(property pad_prop_mechanical)
@@ -3864,7 +3864,7 @@
 			(uuid "0f8bb2c6-7fa1-410b-b1a9-415fb93b5091")
 		)
 		(pad "SH" thru_hole oval
-			(at -4.32 0.8)
+			(at -4.32 0.8 90)
 			(size 1.1 1.7)
 			(drill oval 0.6 1.2)
 			(property pad_prop_mechanical)
@@ -3876,7 +3876,7 @@
 			(uuid "5c48d1a2-49f4-4e74-b7a9-c05e6fb338fc")
 		)
 		(pad "SH" thru_hole oval
-			(at 4.32 -3)
+			(at 4.32 -3 90)
 			(size 1.1 1.7)
 			(drill oval 0.6 1.2)
 			(property pad_prop_mechanical)
@@ -3888,7 +3888,7 @@
 			(uuid "d5eb0d5e-c8d9-4de6-835b-4f08ff9c84b1")
 		)
 		(pad "SH" thru_hole oval
-			(at 4.32 0.8)
+			(at 4.32 0.8 90)
 			(size 1.1 1.7)
 			(drill oval 0.6 1.2)
 			(property pad_prop_mechanical)
@@ -3915,13 +3915,13 @@
 	(footprint "Resistor_SMD:R_0805_2012Metric"
 		(layer "F.Cu")
 		(uuid "e73c6c8a-18b4-4c3d-a0f1-03253eb09e93")
-		(at 135.655 118.175)
+		(at 142.38 121.66)
 		(descr "Resistor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)")
 		(tags "resistor")
 		(property "Reference" "R3"
 			(at 0 -1.65 0)
 			(layer "F.SilkS")
-			(uuid "56eca817-4400-4efb-9732-49a77d24aab8")
+			(uuid "a26a9e7d-9a67-47b2-8c31-a2df25c5f1e9")
 			(effects
 				(font
 					(size 1 1)
@@ -3932,7 +3932,7 @@
 		(property "Value" "10k"
 			(at 0 1.65 0)
 			(layer "F.Fab")
-			(uuid "c55a6a03-66ee-4406-9e0e-f31827768172")
+			(uuid "dc2f8745-7cd5-4428-843e-499da8ae319c")
 			(effects
 				(font
 					(size 1 1)
@@ -3944,7 +3944,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "6f51c0d9-3243-4bfe-bdc5-9d85c88af1d7")
+			(uuid "3dfe4cc3-9e38-484d-bbfc-6b479d90f410")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3955,7 +3955,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "629f7468-87ef-4499-a4d3-dae3b1e2925f")
+			(uuid "2bdf03b3-c13a-4a07-908e-281021a71722")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4073,13 +4073,13 @@
 	(footprint "Capacitor_SMD:C_0805_2012Metric"
 		(layer "F.Cu")
 		(uuid "edb042e3-449e-4205-9edc-448a29c618e9")
-		(at 131.225 115.315)
+		(at 137.95 118.8)
 		(descr "Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)")
 		(tags "capacitor")
 		(property "Reference" "C2"
 			(at 0 -1.68 0)
 			(layer "F.SilkS")
-			(uuid "3d0ea643-a32d-4889-8256-641859b0f99b")
+			(uuid "db1f5ecf-0c8e-4dbd-a6b2-39d0978b45d9")
 			(effects
 				(font
 					(size 1 1)
@@ -4090,7 +4090,7 @@
 		(property "Value" "22uF"
 			(at 0 1.68 0)
 			(layer "F.Fab")
-			(uuid "88b28583-b0f3-4dbb-bafb-a83e115a75ee")
+			(uuid "150f57ff-44da-415c-8c6c-f44c2124ca0f")
 			(effects
 				(font
 					(size 1 1)
@@ -4102,7 +4102,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "56c701c1-a96f-4424-a96a-ab77e6c6e176")
+			(uuid "13b537f6-4ebb-4710-b444-695772637329")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4113,7 +4113,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "db57faae-db32-404c-afea-cb6160860e31")
+			(uuid "a8aad238-2fa8-4f80-bbea-2c6097d9cc74")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4227,6 +4227,18 @@
 				(xyz 0 0 0)
 			)
 		)
+	)
+	(gr_circle
+		(center 172 108.5)
+		(end 148.5 60)
+		(stroke
+			(width 0.2)
+			(type default)
+		)
+		(fill no)
+		(layer "F.Cu")
+		(net "/Call Next")
+		(uuid "424e35e6-b226-425b-8eac-2f33623fe885")
 	)
 	(embedded_fonts no)
 )

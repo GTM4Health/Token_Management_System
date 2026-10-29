@@ -6,13 +6,13 @@
 //    Physical Buttons (momentary push — one leg -> GPIO, other -> GND):
 //      CALL NEXT  -> GPIO 15  (INPUT_PULLUP)
 //      CALL AGAIN -> GPIO 13  (INPUT_PULLUP)
-//      RESET      -> GPIO 14  (INPUT_PULLUP, hold 5 s to confirm)
+//      RESET      -> GPIO 5   (INPUT_PULLUP, hold 5 s to confirm)
 //
 //  Button Behaviour:
 //    NEXT (GPIO 15)  : Short press -> Call next token in queue (POST /next)
 //                      Hold 10 s   -> Clear saved WiFi & enter AP setup mode
 //    AGAIN (GPIO 13) : Short press -> Repeat last called token (POST /call_again)
-//    RESET (GPIO 14) : Hold 5 s    -> Reset entire queue (POST /reset)
+//    RESET (GPIO 5)  : Hold 5 s    -> Reset entire queue (POST /reset)
 //
 //  NO OLED, NO KEYPAD.
 // ============================================================
@@ -41,7 +41,7 @@ bool apMode = false;
 // ── Physical Push Button Pins ─────────────────────────────────
 const int nextButton  = 15;
 const int againButton = 13;
-const int resetButton = 14;
+const int resetButton = 5;
 unsigned long lastPingTime = 0;
 
 // ── Helper: Read Unique Hardware MAC ──────────────────────────
@@ -335,7 +335,7 @@ void setup() {
     Serial.println();
     Serial.println("=========================================");
     Serial.println("Starting GTM4Health Calling Unit...");
-    Serial.println("Hardware: Push Buttons on GPIO 15 (Next), 13 (Again), 14 (Reset)");
+    Serial.println("Hardware: Push Buttons on GPIO 15 (Next), 13 (Again), 5 (Reset)");
     Serial.println("=========================================");
 
     if (loadWiFi()) {
@@ -357,11 +357,11 @@ void loop() {
         return;
     }
 
-    // ── Background heartbeat ping every 2.5 s to maintain "Online" status ──
-    if (WiFi.status() == WL_CONNECTED && millis() - lastPingTime >= 2500) {
+    // ── Background heartbeat ping every 20 s to maintain "Online" status ──
+    if (WiFi.status() == WL_CONNECTED && millis() - lastPingTime >= 20000) {
         lastPingTime = millis();
         HTTPClient http;
-        http.setTimeout(1200);
+        http.setTimeout(2500);
         http.begin(serverURL + "/api/device/ping?device_id=" + getDeviceMAC());
         http.GET();
         http.end();
@@ -398,7 +398,7 @@ void loop() {
         }
     }
 
-    // ── GPIO 14 : Reset Queue (hold 5 s to confirm) ──
+    // ── GPIO 5 : Reset Queue (hold 5 s to confirm) ──
     if (digitalRead(resetButton) == LOW) {
         unsigned long t0 = millis();
         Serial.println("Reset button pressed... Hold 5 s to confirm reset");
