@@ -158,8 +158,18 @@ body{
 .proceed{
     margin-top:30px;
     color:#31556e;
-    font-size:28px;
+    font-size:26px;
+    font-weight:400;
     text-align:center;
+}
+
+.proceed-target{
+    font-size:36px;
+    font-weight:800;
+    color:#0b4f7c;
+    letter-spacing:0.5px;
+    display:inline-block;
+    margin-left:6px;
 }
 
 .queue-section{
@@ -349,7 +359,7 @@ body{
             </div>
 
             <div id="serving-counter" class="proceed">
-                Please proceed to the room
+                Please proceed to <span class="proceed-target">the room</span>
             </div>
 
         </div>
@@ -447,6 +457,21 @@ socket.on("disconnect", function(){
 
 
 /* ==========================================
+   HELPER: RENDER PROCEED TEXT
+========================================= */
+
+function updateProceedText(target){
+    const counterEl = document.getElementById("serving-counter");
+    if (!counterEl) return;
+    if (target && target !== "---") {
+        counterEl.innerHTML = 'Please proceed to <span class="proceed-target">' + target + '</span>';
+    } else {
+        counterEl.innerHTML = 'Please proceed to <span class="proceed-target">the room</span>';
+    }
+}
+
+
+/* ==========================================
    CURRENT SERVING TOKEN
    Runs when page first opens
 ========================================== */
@@ -476,21 +501,17 @@ function loadCurrent(){
                 document.getElementById("serving").innerHTML = data.token;
                 localStorage.setItem("tms_last_serving_token", data.token);
 
-                const counterEl = document.getElementById("serving-counter");
-                if (counterEl) {
-                    if (data.counter && data.counter !== "---") {
-                        counterEl.innerHTML = "Please proceed to " + data.counter;
-                        localStorage.setItem("tms_last_serving_counter", data.counter);
-                    } else {
-                        counterEl.innerHTML = "Please proceed to the room";
-                    }
+                if (data.counter && data.counter !== "---") {
+                    updateProceedText(data.counter);
+                    localStorage.setItem("tms_last_serving_counter", data.counter);
+                } else {
+                    updateProceedText("the room");
                 }
 
             } else {
 
                 document.getElementById("serving").innerHTML = "---";
-                const counterEl = document.getElementById("serving-counter");
-                if (counterEl) counterEl.innerHTML = "Please proceed to the room";
+                updateProceedText("the room");
                 localStorage.removeItem("tms_last_serving_token");
                 localStorage.removeItem("tms_last_serving_counter");
 
@@ -522,14 +543,11 @@ socket.on("serving_changed", function(data){
             data.token;
         localStorage.setItem("tms_last_serving_token", data.token);
 
-        const counterEl = document.getElementById("serving-counter");
-        if (counterEl) {
-            if (data.counter && data.counter !== "---") {
-                counterEl.innerHTML = "Please proceed to " + data.counter;
-                localStorage.setItem("tms_last_serving_counter", data.counter);
-            } else {
-                counterEl.innerHTML = "Please proceed to the room";
-            }
+        if (data.counter && data.counter !== "---") {
+            updateProceedText(data.counter);
+            localStorage.setItem("tms_last_serving_counter", data.counter);
+        } else {
+            updateProceedText("the room");
         }
 
         loadWaiting();
@@ -553,8 +571,7 @@ socket.on("queue_reset", function(){
     document.getElementById("serving").innerHTML =
         "---";
 
-    const counterEl = document.getElementById("serving-counter");
-    if (counterEl) counterEl.innerHTML = "Please proceed to the room";
+    updateProceedText("the room");
 
     document.getElementById("queue-count").innerHTML =
         "0 WAITING";
@@ -762,8 +779,7 @@ const savedCounter = localStorage.getItem("tms_last_serving_counter");
 if (savedServing && savedServing !== "---") {
     document.getElementById("serving").innerHTML = savedServing;
     if (savedCounter && savedCounter !== "---") {
-        const counterEl = document.getElementById("serving-counter");
-        if (counterEl) counterEl.innerHTML = "Please proceed to " + savedCounter;
+        updateProceedText(savedCounter);
     }
 }
 
